@@ -259,12 +259,579 @@
         <h1>راهنمای جامع وب‌سرویس پیام کوتاه</h1>
         <p>این راهنما برای توسعه‌دهندگانی طراحی شده است که قصد دارند سرویس‌های پیام کوتاه و صوتی را به نرم‌افزارهای کاربردی خود متصل کنند. این مستند شامل راهنمای پلتفرم‌های مختلف وب‌سرویس ما می‌باشد.</p>
 
+        <h2>کتابخانه‌های کلاینت (SDKs)</h2>
+        <p>برای سرعت بخشیدن به فرآیند یکپارچه‌سازی، ما در حال توسعه کتابخانه‌های کلاینت (SDK) برای زبان‌های برنامه‌نویسی محبوب هستیم. استفاده از SDKها به جای فراخوانی مستقیم API، روش پیشنهادی و ایده‌آل ماست.</p>
+        
+        <div class="note">
+            <strong>راه‌اندازی سریع (Postman):</strong>
+            <p>اگر ترجیح می‌دهید API را مستقیماً تست کنید، می‌توانید از مجموعه Postman ما استفاده کنید. متغیرهای Environment خود را بر اساس مقادیر زیر تنظیم کنید:</p>
+            <ul>
+                <li><code>base_url_legacy</code>: <code>http://sms.persiafava.com</code></li>
+                <li><code>base_url_esb_1_5</code>: <code>https://sms.persiafava.com:7074</code></li>
+                <li><code>base_url_esb_v2_base</code>: <code>https://sms.persiafava.com</code></li>
+                <li><code>api_key_legacy</code>: (کلید API دریافتی از پنل Legacy)</li>
+                <li><code>auth_string_esb</code>: (رشته احراز هویت Basic برای پلتفرم‌های ESB)</li>
+            </ul>
+        </div>
+
+        <h3>PHP (Laravel)</h3>
+        <p>پایه و اساس PHP SDK ما در این مخزن موجود است و به زودی منتشر خواهد شد.</p>
+        
+        <h3>زبان‌های دیگر (در حال توسعه)</h3>
+        <p>SDK برای پلتفرم‌های زیر در نقشه راه ما قرار دارد:</p>
+        <ul>
+            <li>Node.js (JavaScript/TypeScript)</li>
+            <li>Python</li>
+            <li>.NET (C#)</li>
+        </ul>
+
+        <!-- =================================================================== -->
+        <!-- ==================     ESB V2 (Fanap Mobile)     ================== -->
+        <!-- =================================================================== -->
+
+        <hr style="border-width: 3px; border-color: var(--border-color); margin-top: 40px;">
+        <h2>پلتفرم ۲ (ESB V2)</h2>
+        <p>
+            <strong>(پیشنهادی)</strong>
+            جدیدترین و توصیه‌شده‌ترین پلتفرم ESB که شامل متدهای مدرن و تفکیک‌شده مانند `PeerToPeer`، `Bulk` و `Otp` می‌باشد.
+        </p>
+        <p>سرویس ESB V2 با متدهای REST طراحی شده است. در اين سرويس به ازای هر پیامک ارسالی به یک گیرنده، باید یک شناسه‌ یکتا (<code>uids</code>) جهت پيگیری وضعيت ارایه شود.</p>
+        <div class="note">
+            <strong>نکات مهم:</strong>
+            <ul>
+                <li>بیشینه تعداد شماره گيرنده در متد ارسال نظیر به نظیر، يک‌صد (۱۰۰) عدد است.</li>
+                <li>در پاسخ همه‌ی متدها، پارامتر <code>status</code> نشانگر وضعيت درخواست است. مقدار <code>0</code> به معنای موفقیت و هر عدد غير از صفر کد خطای مربوطه است.</li>
+            </ul>
+        </div>
+
+        <h3>احراز هويت (ESB V2)</h3>
+        <p>احراز هويت اين سرويس بر اساس <code>auth string</code> در هدر HTTP با کليد <code>Authorization</code> و به صورت HTTP Basic Authentication است.</p>
+        <div class="code-block request-box">
+            <div class="code-block-header">
+                <span class="lang">HTTP Header</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-http">Authorization: Basic [auth string]</code></pre>
+        </div>
+        
+        <h3>متد ارسال نظیر به نظیر (PeerToPeer)</h3>
+        <p>برای ارسال پيامک‌های متفاوت به گيرنده‌های متفاوت در یک درخواست (حداکثر ۱۰۰ عدد). پارامترهای <code>senders</code>، <code>messages</code> و <code>recipients</code> باید آرایه‌هایی با طول یکسان باشند.</p>
+        <div class="note">
+            <strong>مهم:</strong> جهت ارسال پیامک‌های رمز یکبار مصرف (OTP) فقط از متد <code>Otp</code> که در ادامه توضیح داده شده است، استفاده کنید.
+        </div>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3000/PeerToPeer</div>
+
+        <p><strong>پارامترها (Body - JSON):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>senders</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از فرستنده‌ها (مثال: <code>"9899921xxxxx"</code>)</td></tr>
+                <tr><td><code>recipients</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از گیرنده‌ها (مثال: <code>"+989xxxxxxxxx"</code>)</td></tr>
+                <tr><td><code>messages</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از پیام‌ها</td></tr>
+                <tr><td><code>uids</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از شناسه‌های یکتای کاربر. (به ازای هر گیرنده یک شناسه یکتا)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="code-block request-box">
+            <div class="code-block-header">
+                <span class="lang">BASH (cURL)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-bash">curl -k -v --location 'https://sms.persiafava.com:3000/PeerToPeer' \
+--header 'Authorization: Basic US9Z........................6g' \
+--header 'Content-Type: application/json' \
+--data '{
+    "<span class="token.variable">senders</span>": [
+        "<span class="token.string">989992178097</span>"
+    ],
+    "<span class="token.variable">messages</span>": [
+        "<span class="token.string">تست</span>"
+    ],
+    "<span class="token.variable">recipients</span>": [
+        "<span class="token.string">+989127962521</span>"
+    ],
+    "<span class="token.variable">uids</span>": [
+        "<span class="token.string">202505111322032890</span>"
+    ]
+}'</code></pre>
+        </div>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">0</span>,
+  "<span class="token.string">smsids</span>": [
+    "<span class="token.string">ABC123</span>",
+    "<span class="token.string">DEF456</span>"
+  ]
+}</code></pre>
+        </div>
+        
+        <div class="code-block error-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Error Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">19</span>,
+  "<span class="token.string">messages</span>": "<span class="token.string">error note</span>" 
+}</code></pre>
+        </div>
+
+        <h3>متد ارسال گروهی (Bulk)</h3>
+        <p>از این متد برای ارسال یک متن از یک سرشماره به چندین گیرنده استفاده می‌شود.</p>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3001/Bulk</div>
+
+        <p><strong>پارامترها (Body - JSON):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>sender</code></td><td>string</td><td>✓</td><td>فرستنده (یک شماره)</td></tr>
+                <tr><td><code>recipients</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از گیرنده‌ها</td></tr>
+                <tr><td><code>message</code></td><td>string</td><td>✓</td><td>متن پیام (یک متن)</td></tr>
+                <tr><td><code>uids</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از شناسه‌های یکتای کاربر (به ازای هر گیرنده)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">0</span>,
+  "<span class="token.string">smsids</span>": [
+    "<span class="token.string">ABC123</span>",
+    "<span class="token.string">DEF456</span>",
+    "<span class="token.string">GHI789</span>"
+  ]
+}</code></pre>
+        </div>
+
+        <h3>متد ارسال پیامک OTP</h3>
+        <p>این متد *فقط* برای ارسال پیامک‌های One Time Password (یک گیرنده، یک فرستنده، یک متن) استفاده می‌شود.</p>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3002/Otp</div>
+
+        <p><strong>پارامترها (Body - JSON):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>sender</code></td><td>string</td><td>✓</td><td>فرستنده</td></tr>
+                <tr><td><code>recipient</code></td><td>string</td><td>✓</td><td>گیرنده (مثال: <code>+989132677411</code>)</td></tr>
+                <tr><td><code>message</code></td><td>string</td><td>✓</td><td>متن پیام (مثال: <code>کد احراز هویت شما 123456</code>)</td></tr>
+                <tr><td><code>uid</code></td><td>string</td><td>✓</td><td>شناسه یکتای کاربر (جلوگیری از تکرار در بازه ۲ ساعته)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">0</span>,
+  "<span class="token.string">smsid</span>": "<span class="token.string">4040@1402@3@789as1</span>"
+}</code></pre>
+        </div>
+
+        <h3>متد دریافت دلیوری (Delivery)</h3>
+        <p>دریافت وضعیت دلیوری پیامک‌های ارسال شده در ۴۸ ساعت اخیر. در این متد، بدنه درخواست (Body) فقط شامل آرایه‌ای از `smsid` ها است.</p>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3003/Delivery</div>
+
+        <div class="code-block request-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Request Body)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">[
+    "<span class="token.string">SMSID1</span>",
+    "<span class="token.string">SMSID2</span>",
+    "<span class="token.string">SMSID3</span>"
+]</code></pre>
+        </div>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">dlrs</span>": {
+    "<span class="token.string">SMSID1</span>": {
+      "<span class="token.string">DateDlr</span>": <span class="token.number">12345678912</span>,
+      "<span class="token.string">DateSent</span>": <span class="token.number">12345678912</span>,
+      "<span class="token.string">dlr</span>": <span class="token.number">1</span>,
+      "<span class="token.string">uid</span>": "<span class="token.string">1234453sdas</span>"
+    },
+    "<span class="token.string">SMSID2</span>": {
+      "<span class="token.string">DateDlr</span>": <span class="token.number">12345678912</span>,
+      "<span class="token.string">DateSent</span>": <span class="token.number">12345678912</span>,
+      "<span class="token.string">dlr</span>": <span class="token.number">2</span>,
+      "<span class="token.string">uid</span>": "<span class="token.string">1234453sdas</span>"
+    }
+  },
+  "<span class="token.string">status</span>": <span class="token.number">0</span>
+}</code></pre>
+        </div>
+
+        <h3>متد دریافت اطلاعات کاربر (UserInfo)</h3>
+        <p>در این متد صرفاً هدر احراز هویت ارسال شده و اطلاعات کاربر بازگردانده می‌شود.</p>
+        <div class="method-url"><span class="method-get">GET</span> https://sms.persiafava.com:3006/UserInfo</div>
+
+        <div class="code-block request-box">
+            <div class="code-block-header">
+                <span class="lang">BASH (cURL)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-bash">curl --location 'https://sms.persiafava.com:3006/UserInfo' \
+--header 'Authorization: Basic Uxxxx'</code></pre>
+        </div>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">0</span>,
+  "<span class="token.string">userInfo</span>": {
+    "<span class="token.string">Username</span>": "<span class="token.string">admin_mojahedi</span>",
+    "<span class="token.string">Fullname</span>": "<span class="token.string">حسین صادقی</span>",
+    "<span class="token.string">Email</span>": "<span class="token.string">sadeghi@gmail.com</span>",
+    "<span class="token.string">Mobile</span>": "<span class="token.string">+989132125459</span>",
+    "<span class="token.string">Cash</span>": <span class="token.number">40034755</span>,
+    "<span class="token.string">Date</span>": <span class="token.number">1667161800</span>,
+    "<span class="token.string">DateExpire</span>": <span class="token.number">4531408200</span>
+  }
+}</code></pre>
+        </div>
+
+        <h3>متد دریافت لیست پیامک‌های دریافتی (ReceivedList)</h3>
+        <p>این متد لیست پیامک‌های دریافتی (MO) را بازمی‌گرداند. این متد پیام‌ها را به عنوان "خوانده شده" علامت نمی‌زند.</p>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3004/ReceivedList</div>
+
+        <p><strong>پارامترها (Body - JSON):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>page_number</code></td><td>int</td><td>خیر</td><td>شماره صفحه (شروع از 1)</td></tr>
+                <tr><td><code>perpage</code></td><td>int</td><td>خیر</td><td>تعداد در هر صفحه (بین 1 تا 100)</td></tr>
+                <tr><td><code>read</code></td><td>int</td><td>خیر</td><td><code>-1</code>: همه، <code>0</code>: خوانده نشده، <code>1</code>: خوانده شده</td></tr>
+                <tr><td><code>catid</code></td><td>int</td><td>خیر</td><td>شماره گروه (فیلتر)</td></tr>
+                <tr><td><code>number</code></td><td>int</td><td>خیر</td><td>شماره دریافت کننده (فیلتر)</td></tr>
+                <tr><td><code>labelid</code></td><td>int</td><td>خیر</td><td>شناسه کلمه کلیدی (فیلتر)</td></tr>
+                <tr><td><code>count</code></td><td>bool</td><td>خیر</td><td><code>true</code> (برای دریافت تعداد کل نتایج)</td></tr>
+                <tr><td><code>fromid</code></td><td>int</td><td>خیر</td><td>دریافت پیام‌های با ID بزرگتر از این مقدار</td></tr>
+                <tr><td><code>ordermode</code></td><td>string</td><td>خیر</td><td><code>DESC</code> (نزولی) یا <code>ASC</code> (صعودی)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">list</span>": [
+    {
+      "<span class="token.string">id</span>": <span class="token.number">4583095</span>,
+      "<span class="token.string">userid</span>": <span class="token.number">201</span>,
+      "<span class="token.string">note</span>": "<span class="token.string">تست</span>",
+      "<span class="token.string">date</span>": <span class="token.number">1704912561</span>,
+      "<span class="token.string">sender_number</span>": "<span class="token.string">09xxxxxxxxx</span>",
+      "<span class="token.string">receiver_number</span>": "<span class="token.string">4040xxxx</span>",
+      "<span class="token.string">smsid</span>": "<span class="token.string">40d6ffb9-9da1-4025-b297-9dfed12ea792</span>",
+      "<span class="token.string">read</span>": "<span class="token.string">0</span>",
+      "<span class="token.string">...</span>": "<span class="token.string">...</span>"
+    }
+  ],
+  "<span class="token.string">count</span>": <span class="token.number">20</span>
+}</code></pre>
+        </div>
+
+        <h3>متد علامت‌گذاری پیامک‌های دریافتی (ReceivedChangeRead)</h3>
+        <p>این متد برای علامت‌گذاری پیامک‌های دریافتی (MO) به عنوان خوانده شده/نشده استفاده می‌شود تا از دریافت تکراری آن‌ها در متد `ReceivedList` جلوگیری شود.</p>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3005/ReceivedChangeRead</div>
+
+        <p><strong>پارامترها (Body - JSON):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>read</code></td><td>int</td><td>✓</td><td><code>1</code> (خوانده شده) یا <code>0</code> (خوانده نشده)</td></tr>
+                <tr><td><code>ids</code></td><td>[]int</td><td>✓</td><td>آرایه‌ای از `id` های دریافتی از متد `ReceivedList`</td></tr>
+            </tbody>
+        </table>
+
+        <div class="code-block request-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Request Body)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">read</span>": <span class="token.number">1</span>,
+  "<span class="token.string">ids</span>": [<span class="token.number">4581399</span>, <span class="token.number">12666</span>]
+}</code></pre>
+        </div>
+
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">0</span>
+}</code></pre>
+        </div>
+
+        <h3>وب‌هوک دلیوری (ESB V2 Delivery Webhook)</h3>
+        <p>گیت‌وی می‌تواند وضعیت پیامک‌ها را به صورت `POST` (Content-Type: application/json) به آدرس اختصاصی شما ارسال کند. در هر درخواست حداکثر وضعیت ۱۰۰ پیامک ارسال می‌گردد.</p>
+        <div class="note">
+            <strong>نکته:</strong> وضعیت نهایی پیامک‌ها نهایتاً تا ۲۴ ساعت پس از ارسال، به این آدرس ارسال می‌شوند.
+        </div>
+        
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Webhook Payload)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">[
+    {
+        "<span class="token.string">clientid</span>": "<span class="token.string">27_62db95259e0e7_0</span>",
+        "<span class="token.string">sender_number</span>": "<span class="token.string">1234567890</span>",
+        "<span class="token.string">receiver_number</span>": "<span class="token.string">9876543210</span>",
+        "<span class="token.string">deliver_date</span>": <span class="token.number">1643723400</span>,
+        "<span class="token.string">deliver_state</span>": <span class="token.number">2</span>
+    },
+    {
+        "<span class="token.string">clientid</span>": "<span class="token.string">27_62db95259756a_0</span>",
+        "<span class="token.string">sender_number</span>": "<span class="token.string">1234567891</span>",
+        "<span class="token.string">receiver_number</span>": "<span class="token.string">9876543211</span>",
+        "<span class="token.string">deliver_date</span>": <span class="token.number">1643723401</span>,
+        "<span class="token.string">deliver_state</span>": <span class="token.number">1</span>
+    }
+]</code></pre>
+        </div>
+
+        <h3>وب‌هوک پیامک دریافتی (ESB V2 MO Webhook)</h3>
+        <p>پیامک‌های دریافتی (MO) بلافاصله پس از دریافت به آدرس شما به صورت `POST` (Content-Type: application/x-www-form-urlencoded) ارسال می‌شوند.</p>
+        <p><strong>پارامترهای ارسالی:</strong></p>
+        <ul>
+            <li><code>from</code>: شماره ارسال کننده</li>
+            <li><code>to</code>: شماره دریافت کننده</li>
+            <li><code>note</code>: متن پیامک</li>
+            <li><code>smsid</code>: شناسه پیامک</li>
+        </ul>
+
+        <h3>کدهای خطای پلتفرم ESB V2</h3>
+        <p>لیست کدهای خطا (<code>status</code>) مختص پلتفرم ESB V2.</p>
+        <table class="error-table">
+            <thead>
+                <tr><th>کد خطا</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>نام متد درخواستی معتبر نيست.</td></tr>
+                <tr><td>2</td><td>هدر احراز هویت وجود ندارد.</td></tr>
+                <tr><td>3</td><td>فرمت درخواست احراز هویت معتبر نيست.</td></tr>
+                <tr><td>4</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی یک بوده است. (ارسال مجدد درخواست)</td></tr>
+                <tr><td>5</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی دو بوده است. (ارسال مجدد درخواست)</td></tr>
+                <tr><td>6</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی سه بوده است. (ارسال مجدد درخواست)</td></tr>
+                <tr><td>7</td><td>حساب کاربری یافت نشد (تماس با مدیریت سامانه).</td></tr>
+                <tr><td>8</td><td>حساب غيرفعال است. (تماس با مدیریت سامانه)</td></tr>
+                <tr><td>9</td><td>آدرس IP مبدا، اجازه دسترسی به این سرویس را ندارد.</td></tr>
+                <tr><td>10</td><td>فرمت جیسون ارسالی مشکل دارد.</td></tr>
+                <tr><td>11</td><td>فرمت جیسون ارسالی اطلاعات حساب کاربری مشکل دارد (تماس با پشتیبانی).</td></tr>
+                <tr><td>12</td><td>خطا در تولید جیسون خروجی.</td></tr>
+                <tr><td>20</td><td>طول آرايه پارامترهای ورودی با هم تطابق ندارد (مثلاً تعداد `uids` با `recipients`).</td></tr>
+                <tr><td>21</td><td>آرایه `uid` خالی است.</td></tr>
+                <tr><td>22</td><td>طول آرايه پارامتر `uid` بيشتر از طول مجاز است.</td></tr>
+                <tr><td>23</td><td>شماره فرستنده به حساب تعلق ندارد.</td></tr>
+                <tr><td>24</td><td>مانده اعتبار ريالی کافی نيست.</td></tr>
+                <tr><td>25</td><td>شناسه پيامک معتبر نيست (ممکن است تکراری باشد یا بیش از ۲۴ ساعت گذشته باشد).</td></tr>
+                <tr><td>26</td><td>فرمت شماره گیرنده معتبر نیست.</td></tr>
+                <tr><td>27</td><td>شماره گیرنده در لیست سیاه قرار دارد.</td></tr>
+            </tbody>
+        </table>
+
+        <h3>کدهای وضعیت دلیوری (ESB V2)</h3>
+        <p>کدهایی که در فیلد `dlr` (در متد Delivery) یا `deliver_state` (در وب‌هوک دلیوری) بازگردانده می‌شوند.</p>
+        <table class="error-table">
+            <thead>
+                <tr><th>کد</th><th>توضیح</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>-2</td><td>پیام یافت نشد - حذف شده</td></tr>
+                <tr><td>-1</td><td>پیام یافت نشد - ممکن است پیام به آرشیو منتقل شده باشد</td></tr>
+                <tr><td>0</td><td>بدون وضعیت - در انتظار دریافت وضعیت</td></tr>
+                <tr><td>1</td><td>رسیده به گوشی</td></tr>
+                <tr><td>2</td><td>نرسیده به گوشی</td></tr>
+                <tr><td>3</td><td>ارسال نشده به مخابرات</td></tr>
+                <tr><td>4</td><td>ارسال شده به مخابرات</td></tr>
+                <tr><td>5</td><td>لیست سیاه مخابرات</td></tr>
+                <tr><td>8</td><td>ارسال شده به اپراتور پیامکی</td></tr>
+                <tr><td>9</td><td>بازگشت هزینه به دلیل ترافیک مخابرات</td></tr>
+                <tr><td>10</td><td>صف ارسال</td></tr>
+                <tr><td>11</td><td>اسپم</td></tr>
+                <tr><td>12</td><td>اکسپایر</td></tr>
+                <tr><td>13</td><td>بدون روت</td></tr>
+                <tr><td>14</td><td>ریجکت شده</td></tr>
+                <tr><td>16</td><td>نرسیده به مخابرات</td></tr>
+                <tr><td>17</td><td>بدون وضعیت دلیوربیس</td></tr>
+            </tbody>
+        </table>
+
+
+        <!-- =================================================================== -->
+        <!-- ===================     ESB 1.5 (Persia Fava)     ================= -->
+        <!-- =================================================================== -->
+
+        <hr style="border-width: 3px; border-color: var(--border-color); margin-top: 40px;">
+        <h2>پلتفرم ۱.۵ (ESB - Persia Fava)</h2>
+        <p>اولین نسخه از پلتفرم ESB که بر روی پورت <code>7074</code> اجرا می‌شود و متد اصلی <code>send</code> را ارائه می‌دهد.</p>
+        
+        <h3>احراز هويت (ESB 1.5)</h3>
+        <p>احراز هويت اين سرويس بر اساس <code>auth string</code> در هدر HTTP با کليد <code>Authorization</code> و به صورت HTTP Basic Authentication است.</p>
+        <div class="code-block request-box">
+            <div class="code-block-header">
+                <span class="lang">HTTP Request</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-http"><span class="token.keyword">POST</span> https://sms.persiafava.com:7074/api/v1/sms/send/3000
+<span class="token.keyword">Authorization:</span> Basic [auth string]</code></pre>
+        </div>
+        
+        <h3>متد ارسال (send)</h3>
+        <p>برای ارسال پيامک به يک یا چند گيرنده (حداکثر ۱۰۰ عدد). ارسال به صورت چند به چند (آرایه‌هایی با طول برابر) پشتیبانی می‌شود. ارسال پارامترها به صورت JSON یا FORM قابل انجام است.</p>
+        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:7074/api/v1/sms/send/3000</div>
+        
+        <p><strong>پارامترها (Body - JSON/FORM):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>senders</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از فرستنده‌ها (مثال: <code>["3000xxxxxx"]</code>)</td></tr>
+                <tr><td><code>recipients</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از گیرنده‌ها (مثال: <code>["+989xxxxxxxxx"]</code>)</td></tr>
+                <tr><td><code>messages</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از پیام‌ها (باید UTF-8 باشد)</td></tr>
+                <tr><td><code>uids</code></td><td>[]long</td><td>✓</td><td>آرایه‌ای از شناسه‌های یکتای کاربر (به ازای هر گیرنده)</td></tr>
+            </tbody>
+        </table>
+        
+        <div class="code-block response-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Success Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">0</span>,
+  "<span class="token.string">messages</span>": [
+    {
+      "<span class="token.string">status</span>": <span class="token.number">0</span>,
+      "<span class="token.string">id</span>": <span class="token.number">111111111</span>,
+      "<span class="token.string">userId</span>": <span class="token.number">1224</span>,
+      "<span class="token.string">parts</span>": <span class="token.keyword">null</span>,
+      "<span class="token.string">tariff</span>": <span class="token.keyword">null</span>,
+      "<span class="token.string">alphabet</span>": <span class="token.keyword">null</span>,
+      "<span class="token.string">recipient</span>": "<span class="token.string">98913xxxxxxx</span>"
+    }
+  ]
+}</code></pre>
+        </div>
+        <div class="note">
+            <strong>توجه:</strong> پارامترهای <code>parts</code>, <code>alphabet</code>, و <code>tariff</code> در خروجی این سرویس خالی بازگردانده می‌شوند و کاربردی ندارند.
+        </div>
+
+        <div class="code-block error-box">
+            <div class="code-block-header">
+                <span class="lang">JSON (Error Response)</span>
+                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
+            </div>
+            <pre><code class="language-json">{
+  "<span class="token.string">status</span>": <span class="token.number">19</span>,
+  "<span class="token.string">messages</span>": []
+}</code></pre>
+        </div>
+        
+        <h3>وب‌هوک دلیوری (ESB 1.5 Webhook)</h3>
+        <p>مشتری باید آدرسی را ارائه دهد تا وضعیت پیامک‌ها به صورت <code>GET</code> به آن ارسال گردد.</p>
+        <p><strong>پارامترهای ارسالی (Query):</strong></p>
+        <table class="param-table">
+            <thead>
+                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>clientid</code></td><td>long</td><td>✓</td><td>شناسه یکتای کاربر (<code>uid</code>) که هنگام ارسال ثبت شده.</td></tr>
+                <tr><td><code>deliver_date</code></td><td>long</td><td>✓</td><td>زمان دریافت دلیوری (Unix Timestamp).</td></tr>
+                <tr><td><code>deliver_state</code></td><td>int</td><td>✓</td><td>وضعیت دلیوری (جدول زیر).</td></tr>
+            </tbody>
+        </table>
+
+        <h4>کدهای وضعیت دلیوری (ESB 1.5)</h4>
+        <table>
+            <thead>
+                <tr><th>مقدار</th><th>معنا</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>رسیده به گوشی</td></tr>
+                <tr><td>2</td><td>نرسیده به گوشی</td></tr>
+                <tr><td>3</td><td>ارسال نشده به مخابرات</td></tr>
+                <tr><td>4</td><td>ارسال شده به مخابرات</td></tr>
+                <tr><td>5</td><td>لیست سیاه مخابرات</td></tr>
+                <tr><td>8</td><td>ارسال شده به مخابرات</td></tr>
+            </tbody>
+        </table>
+
+        <h3>کدهای خطای پلتفرم ESB 1.5</h3>
+        <p>لیست کدهای خطا (<code>status</code>) مختص پلتفرم ESB 1.5.</p>
+        <table class="error-table">
+            <thead>
+                <tr><th>کد خطا</th><th>توضیحات</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>شماره گيرنده نادرست است.</td></tr>
+                <tr><td>2</td><td>شماره فرستنده نادرست است.</td></tr>
+                <tr><td>14</td><td>مانده اعتبار ريالی کافی نيست.</td></tr>
+                <tr><td>15</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی بوده است. (ارسال مجدد)</td></tr>
+                <tr><td>16</td><td>حساب غيرفعال است.</td></tr>
+                <tr><td>17</td><td>حساب منقضی شده است.</td></tr>
+                <tr><td>19</td><td>درخواست معتبر نيست (خطا در احراز هویت).</td></tr>
+                <tr><td>20</td><td>شماره فرستنده به حساب تعلق ندارد.</td></tr>
+                <tr><td>22</td><td>اين سرويس برای حساب فعال نشده است.</td></tr>
+                <tr><td>23</td><td>امکان پردازش درخواست جديد وجود ندارد، لطفا دوباره سعی كنيد.</td></tr>
+                <tr><td>24</td><td>شناسه پيامک معتبر نيست (قدیمی یا اشتباه).</td></tr>
+                <tr><td>25</td><td>نام متد درخواستی معتبر نيست.</td></tr>
+                <tr><td>28</td><td>شماره گیرنده، بر اساس پیش‌شماره مسدود است.</td></tr>
+                <tr><td>29</td><td>آدرس IP مبدا، اجازه دسترسی به این سرویس را ندارد.</td></tr>
+                <tr><td>101</td><td>طول آرايه <code>messages</code> با <code>recipients</code> تطابق ندارد.</td></tr>
+                <tr><td>103</td><td>طول آرايه <code>senders</code> با <code>recipients</code> تطابق ندارد.</td></tr>
+                <tr><td>106</td><td>آرايه‌ی گيرندگان خالی است.</td></tr>
+                <tr><td>107</td><td>طول آرايه گيرندگان بيشتر از طول مجاز (۱۰۰) است.</td></tr>
+                <tr><td>108</td><td>آرايه‌ی فرستندگان خالی است.</td></tr>
+            </tbody>
+        </table>
+
         <!-- =================================================================== -->
         <!-- ==================     LEGACY PERSIAFAVA API     ================== -->
         <!-- =================================================================== -->
 
+        <hr style="border-width: 3px; border-color: var(--border-color); margin-top: 40px;">
         <h2>پلتفرم (Legacy - PersiaFava)</h2>
-        <p>این بخش شامل مستندات وب‌سرویس‌های قدیمی‌تر (SOAP, GET) و وب‌سرویس REST پلتفرم <code>sms.persiafava.com</code> می‌باشد.</p>
+        <p>
+            <strong>(قدیمی)</strong>
+            این بخش شامل مستندات وب‌سرویس‌های قدیمی‌تر (SOAP, GET) و وب‌سرویس REST پلتفرم <code>sms.persiafava.com</code> می‌باشد.
+        </p>
 
         <h3>مفاهیم پایه (Legacy)</h3>
         <h4>کدهای خطا (Legacy)</h4>
@@ -405,7 +972,7 @@
             </tbody>
         </table>
 
-        <h4>وضعیت پیامک‌ها (Delivery Status)</h4>
+        <h4>وضعیت پیامک‌ها (Legacy Delivery Status)</h4>
         <p>کدهای وضعیتی که در پاسخ متدهای دریافت وضعیت (مانند <code>sms_deliver</code>) بازگردانده می‌شوند.</p>
         <table>
             <thead>
@@ -775,7 +1342,7 @@
       <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;</span>request_uniqueid</span> <span class="token.attr-name"><span class="token.namespace">SOAP-ENC:</span>arrayType</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"xsd:string[1]"</span></span> <span class="token.attr-name"><span class="token.namespace">xsi:</span>type</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"ns2:ArrayOfString"</span></span><span class="token.punctuation">&gt;</span></span>
         <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;</span>item</span> <span class="token.attr-name"><span class="token.namespace">xsi:</span>type</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"xsd:string"</span></span><span class="token.punctuation">&gt;</span></span><span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;/</span>item</span><span class="token.punctuation">&gt;</span></span>
       <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;/</span>request_uniqueid</span><span class="token.punctuation">&gt;</span></span>
-      <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;</span>flash</span> <span class="token.attr-name"><span class="token.namespace">SOAP-ENC:</span>arrayType</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"xsd:string[1]"</span></span> <span class="token.attr-name"><span class="token.namespace">xsi:</span>type</span><span class="token.attr-value"><span class="token. punctuation">=</span><span class="token.string">"ns2:ArrayOfString"</span></span><span class="token.punctuation">&gt;</span></span>
+      <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;</span>flash</span> <span class="token.attr-name"><span class="token.namespace">SOAP-ENC:</span>arrayType</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"xsd:string[1]"</span></span> <span class="token.attr-name"><span class="token.namespace">xsi:</span>type</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"ns2:ArrayOfString"</span></span><span class="token.punctuation">&gt;</span></span>
         <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;</span>item</span> <span class="token.attr-name"><span class="token.namespace">xsi:</span>type</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"xsd:string"</span></span><span class="token.punctuation">&gt;</span></span>no<span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;/</span>item</span><span class="token.punctuation">&gt;</span></span>
       <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;/</span>flash</span><span class="token.punctuation">&gt;</span></span>
       <span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;</span>onlysend</span> <span class="token.attr-name"><span class="token.namespace">xsi:</span>type</span><span class="token.attr-value"><span class="token.punctuation">=</span><span class="token.string">"xsd:string"</span></span><span class="token.punctuation">&gt;</span></span>ok<span class="token.tag"><span class="token.tag"><span class="token.punctuation">&lt;/</span>onlysend</span><span class="token.punctuation">&gt;</span></span>
@@ -894,535 +1461,6 @@
             </tbody>
         </table>
 
-        <!-- =================================================================== -->
-        <!-- ===================     ESB PERSIAFAVA API (1.5)  ================= -->
-        <!-- =================================================================== -->
-
-        <hr style="border-width: 3px; border-color: var(--border-color); margin-top: 40px;">
-        <h2>پلتفرم ۱.۵ (ESB - Persia Fava)</h2>
-        <p>این سرویس ESB با متدهای REST و به صورت امن HTTPS (پورت <code>7074</code>) طراحی شده است.</p>
-        
-        <h3>احراز هويت (ESB 1.5)</h3>
-        <p>احراز هويت اين سرويس بر اساس <code>auth string</code> در هدر HTTP با کليد <code>Authorization</code> و به صورت HTTP Basic Authentication است.</p>
-        <div class="code-block request-box">
-            <div class="code-block-header">
-                <span class="lang">HTTP Request</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-http"><span class="token.keyword">POST</span> https://sms.persiafava.com:7074/api/v1/sms/send/3000
-<span class="token.keyword">Authorization:</span> Basic [auth string]</code></pre>
-        </div>
-        
-        <h3>متد ارسال (send)</h3>
-        <p>برای ارسال پيامک به يک یا چند گيرنده (حداکثر ۱۰۰ عدد). ارسال به صورت چند به چند (آرایه‌هایی با طول برابر) پشتیبانی می‌شود. ارسال پارامترها به صورت JSON یا FORM قابل انجام است.</p>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:7074/api/v1/sms/send/3000</div>
-        
-        <p><strong>پارامترها (Body - JSON/FORM):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>senders</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از فرستنده‌ها (مثال: <code>["3000xxxxxx"]</code>)</td></tr>
-                <tr><td><code>recipients</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از گیرنده‌ها (مثال: <code>["+989xxxxxxxxx"]</code>)</td></tr>
-                <tr><td><code>messages</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از پیام‌ها (باید UTF-8 باشد)</td></tr>
-                <tr><td><code>uids</code></td><td>[]long</td><td>✓</td><td>آرایه‌ای از شناسه‌های یکتای کاربر (به ازای هر گیرنده)</td></tr>
-            </tbody>
-        </table>
-        
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">0</span>,
-  "<span class="token.string">messages</span>": [
-    {
-      "<span class="token.string">status</span>": <span class="token.number">0</span>,
-      "<span class="token.string">id</span>": <span class="token.number">111111111</span>,
-      "<span class="token.string">userId</span>": <span class="token.number">1224</span>,
-      "<span class="token.string">parts</span>": <span class="token.keyword">null</span>,
-      "<span class="token.string">tariff</span>": <span class="token.keyword">null</span>,
-      "<span class="token.string">alphabet</span>": <span class="token.keyword">null</span>,
-      "<span class="token.string">recipient</span>": "<span class="token.string">98913xxxxxxx</span>"
-    }
-  ]
-}</code></pre>
-        </div>
-
-        <div class="code-block error-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Error Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">19</span>,
-  "<span class="token.string">messages</span>": []
-}</code></pre>
-        </div>
-        
-        <h3>وب‌هوک دلیوری (ESB 1.5 Webhook)</h3>
-        <p>مشتری باید آدرسی را ارائه دهد تا وضعیت پیامک‌ها به صورت <code>GET</code> به آن ارسال گردد.</p>
-        <p><strong>پارامترهای ارسالی (Query):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>clientid</code></td><td>long</td><td>✓</td><td>شناسه یکتای کاربر (<code>uid</code>) که هنگام ارسال ثبت شده.</td></tr>
-                <tr><td><code>deliver_date</code></td><td>long</td><td>✓</td><td>زمان دریافت دلیوری (Unix Timestamp).</td></tr>
-                <tr><td><code>deliver_state</code></td><td>int</td><td>✓</td><td>وضعیت دلیوری (جدول زیر).</td></tr>
-            </tbody>
-        </table>
-
-        <h4>کدهای وضعیت دلیوری (ESB 1.5)</h4>
-        <table>
-            <thead>
-                <tr><th>مقدار</th><th>معنا</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>1</td><td>رسیده به گوشی</td></tr>
-                <tr><td>2</td><td>نرسیده به گوشی</td></tr>
-                <tr><td>3</td><td>ارسال نشده به مخابرات</td></tr>
-                <tr><td>4</td><td>ارسال شده به مخابرات</td></tr>
-                <tr><td>5</td><td>لیست سیاه مخابرات</td></tr>
-                <tr><td>8</td><td>ارسال شده به مخابرات</td></tr>
-            </tbody>
-        </table>
-
-        <h3>کدهای خطای پلتفرم ESB 1.5</h3>
-        <p>لیست کدهای خطا (<code>status</code>) مختص پلتفرم ESB 1.5.</p>
-        <table class="error-table">
-            <thead>
-                <tr><th>کد خطا</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>1</td><td>شماره گيرنده نادرست است.</td></tr>
-                <tr><td>2</td><td>شماره فرستنده نادرست است.</td></tr>
-                <tr><td>14</td><td>مانده اعتبار ريالی کافی نيست.</td></tr>
-                <tr><td>15</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی بوده است. (ارسال مجدد)</td></tr>
-                <tr><td>16</td><td>حساب غيرفعال است.</td></tr>
-                <tr><td>17</td><td>حساب منقضی شده است.</td></tr>
-                <tr><td>19</td><td>درخواست معتبر نيست (خطا در احراز هویت).</td></tr>
-                <tr><td>20</td><td>شماره فرستنده به حساب تعلق ندارد.</td></tr>
-                <tr><td>22</td><td>اين سرويس برای حساب فعال نشده است.</td></tr>
-                <tr><td>23</td><td>امکان پردازش درخواست جديد وجود ندارد، لطفا دوباره سعی كنيد.</td></tr>
-                <tr><td>24</td><td>شناسه پيامک معتبر نيست (قدیمی یا اشتباه).</td></tr>
-                <tr><td>25</td><td>نام متد درخواستی معتبر نيست.</td></tr>
-                <tr><td>28</td><td>شماره گیرنده، بر اساس پیش‌شماره مسدود است.</td></tr>
-                <tr><td>29</td><td>آدرس IP مبدا، اجازه دسترسی به این سرویس را ندارد.</td></tr>
-                <tr><td>101</td><td>طول آرايه <code>messages</code> با <code>recipients</code> تطابق ندارد.</td></tr>
-                <tr><td>103</td><td>طول آرايه <code>senders</code> با <code>recipients</code> تطابق ندارد.</td></tr>
-                <tr><td>106</td><td>آرايه‌ی گيرندگان خالی است.</td></tr>
-                <tr><td>107</td><td>طول آرايه گيرندگان بيشتر از طول مجاز (۱۰۰) است.</td></tr>
-                <tr><td>108</td><td>آرايه‌ی فرستندگان خالی است.</td></tr>
-            </tbody>
-        </table>
-
-        <!-- ================================================================= -->
-        <!-- ===================     ESB FANAP API (V2)     =================== -->
-        <!-- ================================================================= -->
-
-        <hr style="border-width: 3px; border-color: var(--border-color); margin-top: 40px;">
-        <h2>پلتفرم ۲ (ESB V2)</h2>
-        <p>سرویس ESB V2 با متدهای REST طراحی شده است. در اين سرويس به ازای هر پیامک ارسالی به یک گیرنده، باید یک شناسه‌ یکتا (<code>uids</code>) جهت پيگیری وضعيت ارایه شود.</p>
-        <div class="note">
-            <strong>نکات مهم:</strong>
-            <ul>
-                <li>بیشینه تعداد شماره گيرنده در متد ارسال نظیر به نظیر، يک‌صد (۱۰۰) عدد است.</li>
-                <li>در پاسخ همه‌ی متدها، پارامتر <code>status</code> نشانگر وضعيت درخواست است. مقدار <code>0</code> به معنای موفقیت و هر عدد غير از صفر کد خطای مربوطه است.</li>
-            </ul>
-        </div>
-
-        <h3>احراز هويت (ESB V2)</h3>
-        <p>احراز هويت اين سرويس بر اساس <code>auth string</code> در هدر HTTP با کليد <code>Authorization</code> و به صورت HTTP Basic Authentication است.</p>
-        <div class="code-block request-box">
-            <div class="code-block-header">
-                <span class="lang">HTTP Header</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-http">Authorization: Basic [auth string]</code></pre>
-        </div>
-        
-        <h3>متد ارسال نظیر به نظیر (PeerToPeer)</h3>
-        <p>برای ارسال پيامک‌های متفاوت به گيرنده‌های متفاوت در یک درخواست (حداکثر ۱۰۰ عدد). پارامترهای <code>senders</code>، <code>messages</code> و <code>recipients</code> باید آرایه‌هایی با طول یکسان باشند.</p>
-        <div class="note">
-            <strong>مهم:</strong> جهت ارسال پیامک‌های رمز یکبار مصرف (OTP) فقط از متد <code>Otp</code> که در ادامه توضیح داده شده است، استفاده کنید.
-        </div>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3000/PeerToPeer</div>
-
-        <p><strong>پارامترها (Body - JSON):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>senders</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از فرستنده‌ها (مثال: <code>["9899921xxxxx"]</code>)</td></tr>
-                <tr><td><code>recipients</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از گیرنده‌ها (مثال: <code>["+989xxxxxxxxx"]</code>)</td></tr>
-                <tr><td><code>messages</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از پیام‌ها</td></tr>
-                <tr><td><code>uids</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از شناسه‌های یکتای کاربر. (به ازای هر گیرنده یک شناسه یکتا)</td></tr>
-            </tbody>
-        </table>
-
-        <div class="code-block request-box">
-            <div class="code-block-header">
-                <span class="lang">BASH (cURL)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-bash">curl -k -v --location 'https://sms.persiafava.com:3000/PeerToPeer' \
---header 'Authorization: Basic US9Z........................6g' \
---header 'Content-Type: application/json' \
---data '{
-    "<span class="token.variable">senders</span>": [
-        "<span class="token.string">989992178097</span>"
-    ],
-    "<span class="token.variable">messages</span>": [
-        "<span class="token.string">تست</span>"
-    ],
-    "<span class="token.variable">recipients</span>": [
-        "<span class="token.string">+989127962521</span>"
-    ],
-    "<span class="token.variable">uids</span>": [
-        "<span class="token.string">202505111322032890</span>"
-    ]
-}'</code></pre>
-        </div>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">0</span>,
-  "<span class="token.string">smsids</span>": [
-    "<span class="token.string">ABC123</span>",
-    "<span class="token.string">DEF456</span>"
-  ]
-}</code></pre>
-        </div>
-        
-        <div class="code-block error-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Error Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">19</span>,
-  "<span class="token.string">messages</span>": "<span class="token.string">error note</span>" 
-}</code></pre>
-        </div>
-
-        <h3>متد ارسال گروهی (Bulk)</h3>
-        <p>از این متد برای ارسال یک متن از یک سرشماره به چندین گیرنده استفاده می‌شود.</p>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3001/Bulk</div>
-
-        <p><strong>پارامترها (Body - JSON):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>sender</code></td><td>string</td><td>✓</td><td>فرستنده (یک شماره)</td></tr>
-                <tr><td><code>recipients</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از گیرنده‌ها</td></tr>
-                <tr><td><code>message</code></td><td>string</td><td>✓</td><td>متن پیام (یک متن)</td></tr>
-                <tr><td><code>uids</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از شناسه‌های یکتای کاربر (به ازای هر گیرنده)</td></tr>
-            </tbody>
-        </table>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">0</span>,
-  "<span class="token.string">smsids</span>": [
-    "<span class="token.string">ABC123</span>",
-    "<span class="token.string">DEF456</span>",
-    "<span class="token.string">GHI789</span>"
-  ]
-}</code></pre>
-        </div>
-
-        <h3>متد ارسال پیامک OTP</h3>
-        <p>این متد *فقط* برای ارسال پیامک‌های One Time Password (یک گیرنده، یک فرستنده، یک متن) استفاده می‌شود.</p>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3002/Otp</div>
-
-        <p><strong>پارامترها (Body - JSON):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>sender</code></td><td>string</td><td>✓</td><td>فرستنده</td></tr>
-                <tr><td><code>recipient</code></td><td>string</td><td>✓</td><td>گیرنده (مثال: <code>+989132677411</code>)</td></tr>
-                <tr><td><code>message</code></td><td>string</td><td>✓</td><td>متن پیام (مثال: <code>کد احراز هویت شما 123456</code>)</td></tr>
-                <tr><td><code>uid</code></td><td>string</td><td>✓</td><td>شناسه یکتای کاربر (جلوگیری از تکرار در بازه ۲ ساعته)</td></tr>
-            </tbody>
-        </table>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">0</span>,
-  "<span class="token.string">smsid</span>": "<span class="token.string">4040@1402@3@789as1</span>"
-}</code></pre>
-        </div>
-
-        <h3>متد دریافت دلیوری (Delivery)</h3>
-        <p>دریافت وضعیت دلیوری پیامک‌های ارسال شده در ۴۸ ساعت اخیر. در این متد، بدنه درخواست (Body) فقط شامل آرایه‌ای از `smsid` ها است.</p>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3003/Delivery</div>
-
-        <div class="code-block request-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Request Body)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">[
-    "<span class="token.string">SMSID1</span>",
-    "<span class="token.string">SMSID2</span>",
-    "<span class="token.string">SMSID3</span>"
-]</code></pre>
-        </div>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">dlrs</span>": {
-    "<span class="token.string">SMSID1</span>": {
-      "<span class="token.string">DateDlr</span>": <span class="token.number">12345678912</span>,
-      "<span class="token.string">DateSent</span>": <span class="token.number">12345678912</span>,
-      "<span class="token.string">dlr</span>": <span class="token.number">1</span>,
-      "<span class="token.string">uid</span>": "<span class="token.string">1234453sdas</span>"
-    },
-    "<span class="token.string">SMSID2</span>": {
-      "<span class="token.string">DateDlr</span>": <span class="token.number">12345678912</span>,
-      "<span class="token.string">DateSent</span>": <span class="token.number">12345678912</span>,
-      "<span class="token.string">dlr</span>": <span class="token.number">2</span>,
-      "<span class="token.string">uid</span>": "<span class="token.string">1234453sdas</span>"
-    }
-  },
-  "<span class="token.string">status</span>": <span class="token.number">0</span>
-}</code></pre>
-        </div>
-
-        <h3>متد دریافت اطلاعات کاربر (UserInfo)</h3>
-        <p>در این متد صرفاً هدر احراز هویت ارسال شده و اطلاعات کاربر بازگردانده می‌شود.</p>
-        <div class="method-url"><span class="method-get">GET</span> https://sms.persiafava.com:3006/UserInfo</div>
-
-        <div class="code-block request-box">
-            <div class="code-block-header">
-                <span class="lang">BASH (cURL)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-bash">curl --location 'https://sms.persiafava.com:3006/UserInfo' \
---header 'Authorization: Basic Uxxxx'</code></pre>
-        </div>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">0</span>,
-  "<span class="token.string">userInfo</span>": {
-    "<span class="token.string">Username</span>": "<span class="token.string">admin_mojahedi</span>",
-    "<span class="token.string">Fullname</span>": "<span class="token.string">حسین صادقی</span>",
-    "<span class="token.string">Email</span>": "<span class="token.string">sadeghi@gmail.com</span>",
-    "<span class="token.string">Mobile</span>": "<span class="token.string">+989132125459</span>",
-    "<span class="token.string">Cash</span>": <span class="token.number">40034755</span>,
-    "<span class="token.string">Date</span>": <span class="token.number">1667161800</span>,
-    "<span class="token.string">DateExpire</span>": <span class="token.number">4531408200</span>
-  }
-}</code></pre>
-        </div>
-
-        <h3>متد دریافت لیست پیامک‌های دریافتی (ReceivedList)</h3>
-        <p>این متد لیست پیامک‌های دریافتی (MO) را بازمی‌گرداند. این متد پیام‌ها را به عنوان "خوانده شده" علامت نمی‌زند.</p>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3004/ReceivedList</div>
-
-        <p><strong>پارامترها (Body - JSON):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>page_number</code></td><td>int</td><td>خیر</td><td>شماره صفحه (شروع از 1)</td></tr>
-                <tr><td><code>perpage</code></td><td>int</td><td>خیر</td><td>تعداد در هر صفحه (بین 1 تا 100)</td></tr>
-                <tr><td><code>read</code></td><td>int</td><td>خیر</td><td><code>-1</code>: همه، <code>0</code>: خوانده نشده، <code>1</code>: خوانده شده</td></tr>
-                <tr><td><code>catid</code></td><td>int</td><td>خیر</td><td>شماره گروه (فیلتر)</td></tr>
-                <tr><td><code>number</code></td><td>int</td><td>خیر</td><td>شماره دریافت کننده (فیلتر)</td></tr>
-                <tr><td><code>labelid</code></td><td>int</td><td>خیر</td><td>شناسه کلمه کلیدی (فیلتر)</td></tr>
-                <tr><td><code>count</code></td><td>bool</td><td>خیر</td><td><code>true</code> (برای دریافت تعداد کل نتایج)</td></tr>
-                <tr><td><code>fromid</code></td><td>int</td><td>خیر</td><td>دریافت پیام‌های با ID بزرگتر از این مقدار</td></tr>
-                <tr><td><code>ordermode</code></td><td>string</td><td>خیر</td><td><code>DESC</code> (نزولی) یا <code>ASC</code> (صعودی)</td></tr>
-            </tbody>
-        </table>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">list</span>": [
-    {
-      "<span class="token.string">id</span>": <span class="token.number">4583095</span>,
-      "<span class="token.string">userid</span>": <span class="token.number">201</span>,
-      "<span class="token.string">note</span>": "<span class="token.string">تست</span>",
-      "<span class="token.string">date</span>": <span class="token.number">1704912561</span>,
-      "<span class="token.string">sender_number</span>": "<span class="token.string">09xxxxxxxxx</span>",
-      "<span class="token.string">receiver_number</span>": "<span class="token.string">4040xxxx</span>",
-      "<span class="token.string">smsid</span>": "<span class="token.string">40d6ffb9-9da1-4025-b297-9dfed12ea792</span>",
-      "<span class="token.string">read</span>": "<span class="token.string">0</span>",
-      "<span class="token.string">...</span>": "<span class="token.string">...</span>"
-    }
-  ],
-  "<span class="token.string">count</span>": <span class="token.number">20</span>
-}</code></pre>
-        </div>
-
-        <h3>متد علامت‌گذاری پیامک‌های دریافتی (ReceivedChangeRead)</h3>
-        <p>این متد برای علامت‌گذاری پیامک‌های دریافتی (MO) به عنوان خوانده شده/نشده استفاده می‌شود تا از دریافت تکراری آن‌ها در متد `ReceivedList` جلوگیری شود.</p>
-        <div class="method-url"><span class="method-post">POST</span> https://sms.persiafava.com:3005/ReceivedChangeRead</div>
-
-        <p><strong>پارامترها (Body - JSON):</strong></p>
-        <table class="param-table">
-            <thead>
-                <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>read</code></td><td>int</td><td>✓</td><td><code>1</code> (خوانده شده) یا <code>0</code> (خوانده نشده)</td></tr>
-                <tr><td><code>ids</code></td><td>[]int</td><td>✓</td><td>آرایه‌ای از `id` های دریافتی از متد `ReceivedList`</td></tr>
-            </tbody>
-        </table>
-
-        <div class="code-block request-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Request Body)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">read</span>": <span class="token.number">1</span>,
-  "<span class="token.string">ids</span>": [<span class="token.number">4581399</span>, <span class="token.number">12666</span>]
-}</code></pre>
-        </div>
-
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Success Response)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">{
-  "<span class="token.string">status</span>": <span class="token.number">0</span>
-}</code></pre>
-        </div>
-
-        <h3>وب‌هوک دلیوری (ESB V2 Delivery Webhook)</h3>
-        <p>گیت‌وی می‌تواند وضعیت پیامک‌ها را به صورت `POST` (Content-Type: application/json) به آدرس اختصاصی شما ارسال کند. در هر درخواست حداکثر وضعیت ۱۰۰ پیامک ارسال می‌گردد.</p>
-        <div class="note">
-            <strong>نکته:</strong> وضعیت نهایی پیامک‌ها نهایتاً تا ۲۴ ساعت پس از ارسال، به این آدرس ارسال می‌شوند.
-        </div>
-        
-        <div class="code-block response-box">
-            <div class="code-block-header">
-                <span class="lang">JSON (Webhook Payload)</span>
-                <button class="copy-btn" onclick="copyCode(this)">کپی</button>
-            </div>
-            <pre><code class="language-json">[
-    {
-        "<span class="token.string">clientid</span>": "<span class="token.string">27_62db95259e0e7_0</span>",
-        "<span class="token.string">sender_number</span>": "<span class="token.string">1234567890</span>",
-        "<span class="token.string">receiver_number</span>": "<span class="token.string">9876543210</span>",
-        "<span class="token.string">deliver_date</span>": <span class="token.number">1643723400</span>,
-        "<span class="token.string">deliver_state</span>": <span class="token.number">2</span>
-    },
-    {
-        "<span class="token.string">clientid</span>": "<span class="token.string">27_62db95259756a_0</span>",
-        "<span class="token.string">sender_number</span>": "<span class="token.string">1234567891</span>",
-        "<span class="token.string">receiver_number</span>": "<span class="token.string">9876543211</span>",
-        "<span class="token.string">deliver_date</span>": <span class="token.number">1643723401</span>,
-        "<span class="token.string">deliver_state</span>": <span class="token.number">1</span>
-    }
-]</code></pre>
-        </div>
-
-        <h3>وب‌هوک پیامک دریافتی (ESB V2 MO Webhook)</h3>
-        <p>پیامک‌های دریافتی (MO) بلافاصله پس از دریافت به آدرس شما به صورت `POST` (Content-Type: application/x-www-form-urlencoded) ارسال می‌شوند.</p>
-        <p><strong>پارامترهای ارسالی:</strong></p>
-        <ul>
-            <li><code>from</code>: شماره ارسال کننده</li>
-            <li><code>to</code>: شماره دریافت کننده</li>
-            <li><code>note</code>: متن پیامک</li>
-            <li><code>smsid</code>: شناسه پیامک</li>
-        </ul>
-
-        <h3>کدهای خطای پلتفرم ESB V2</h3>
-        <p>لیست کدهای خطا (<code>status</code>) مختص پلتفرم ESB V2.</p>
-        <table class="error-table">
-            <thead>
-                <tr><th>کد خطا</th><th>توضیحات</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>1</td><td>نام متد درخواستی معتبر نيست.</td></tr>
-                <tr><td>2</td><td>هدر احراز هویت وجود ندارد.</td></tr>
-                <tr><td>3</td><td>فرمت درخواست احراز هویت معتبر نيست.</td></tr>
-                <tr><td>4</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی یک بوده است. (ارسال مجدد درخواست)</td></tr>
-                <tr><td>5</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی دو بوده است. (ارسال مجدد درخواست)</td></tr>
-                <tr><td>6</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی سه بوده است. (ارسال مجدد درخواست)</td></tr>
-                <tr><td>7</td><td>حساب کاربری یافت نشد (تماس با مدیریت سامانه).</td></tr>
-                <tr><td>8</td><td>حساب غيرفعال است. (تماس با مدیریت سامانه)</td></tr>
-                <tr><td>9</td><td>آدرس IP مبدا، اجازه دسترسی به این سرویس را ندارد.</td></tr>
-                <tr><td>10</td><td>فرمت جیسون ارسالی مشکل دارد.</td></tr>
-                <tr><td>11</td><td>فرمت جیسون ارسالی اطلاعات حساب کاربری مشکل دارد (تماس با پشتیبانی).</td></tr>
-                <tr><td>12</td><td>خطا در تولید جیسون خروجی.</td></tr>
-                <tr><td>20</td><td>طول آرايه پارامترهای ورودی با هم تطابق ندارد (مثلاً تعداد `uids` با `recipients`).</td></tr>
-                <tr><td>21</td><td>آرایه `uid` خالی است.</td></tr>
-                <tr><td>22</td><td>طول آرايه پارامتر `uid` بيشتر از طول مجاز است.</td></tr>
-                <tr><td>23</td><td>شماره فرستنده به حساب تعلق ندارد.</td></tr>
-                <tr><td>24</td><td>مانده اعتبار ريالی کافی نيست.</td></tr>
-                <tr><td>25</td><td>شناسه پيامک معتبر نيست (ممکن است تکراری باشد یا بیش از ۲۴ ساعت گذشته باشد).</td></tr>
-                <tr><td>26</td><td>فرمت شماره گیرنده معتبر نیست.</td></tr>
-                <tr><td>27</td><td>شماره گیرنده در لیست سیاه قرار دارد.</td></tr>
-            </tbody>
-        </table>
-
-        <h3>کدهای وضعیت دلیوری (ESB V2)</h3>
-        <p>کدهایی که در فیلد `dlr` (در متد Delivery) یا `deliver_state` (در وب‌هوک دلیوری) بازگردانده می‌شوند.</p>
-        <table class="error-table">
-            <thead>
-                <tr><th>کد</th><th>توضیح</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>-2</td><td>پیام یافت نشد - حذف شده</td></tr>
-                <tr><td>-1</td><td>پیام یافت نشد - ممکن است پیام به آرشیو منتقل شده باشد</td></tr>
-                <tr><td>0</td><td>بدون وضعیت - در انتظار دریافت وضعیت</td></tr>
-                <tr><td>1</td><td>رسیده به گوشی</td></tr>
-                <tr><td>2</td><td>نرسیده به گوشی</td></tr>
-                <tr><td>3</td><td>ارسال نشده به مخابرات</td></tr>
-                <tr><td>4</td><td>ارسال شده به مخابرات</td></tr>
-                <tr><td>5</td><td>لیست سیاه مخابرات</td></tr>
-                <tr><td>8</td><td>ارسال شده به اپراتور پیامکی</td></tr>
-                <tr><td>9</td><td>بازگشت هزینه به دلیل ترافیک مخابرات</td></tr>
-                <tr><td>10</td><td>صف ارسال</td></tr>
-                <tr><td>11</td><td>اسپم</td></tr>
-                <tr><td>12</td><td>اکسپایر</td></tr>
-                <tr><td>13</td><td>بدون روت</td></tr>
-                <tr><td>14</td><td>ریجکت شده</td></tr>
-                <tr><td>16</td><td>نرسیده به مخابرات</td></tr>
-                <tr><td>17</td><td>بدون وضعیت دلیوربیس</td></tr>
-            </tbody>
-        </table>
-
     </div>
 
     <script>
@@ -1470,8 +1508,4 @@
     </script>
     </body>
 </html>
-
-
-
-
 
