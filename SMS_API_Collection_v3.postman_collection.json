@@ -1,0 +1,532 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+		"name": "SMS API Collection (All Platforms)",
+		"description": "مجموعه کامل Postman برای تست هر سه پلتفرم وب‌سرویس پیامک.\n\n**متغیرهای مورد نیاز:**\n- `{{base_url_legacy}}`: http://sms.persiafava.com\n- `{{base_url_esb_1_5}}`: https://sms.persiafava.com:7074\n- `{{base_url_esb_v2_base}}`: https://sms.persiafava.com\n- `{{api_key_legacy}}`: کلید API دریافت شده از پنل Legacy\n- `{{auth_string_esb}}`: رشته احراز هویت Basic برای پلتفرم‌های ESB\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "[Legacy] PersiaFava",
+			"description": "پلتفرم قدیمی (Legacy) با متدهای REST, SOAP, GET",
+			"item": [
+				{
+					"name": "REST: Get User Info (API Key)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_legacy}}/webservice/rest/user_info?api_key={{api_key_legacy}}",
+							"host": [
+								"{{base_url_legacy}}"
+							],
+							"path": [
+								"webservice",
+								"rest",
+								"user_info"
+							],
+							"query": [
+								{
+									"key": "api_key",
+									"value": "{{api_key_legacy}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "REST: Send SMS (API Key)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "api_key",
+									"value": "{{api_key_legacy}}",
+									"type": "text"
+								},
+								{
+									"key": "sender_number",
+									"value": "3000569999",
+									"type": "text"
+								},
+								{
+									"key": "receiver_number",
+									"value": "09123456789",
+									"type": "text"
+								},
+								{
+									"key": "note_arr[]",
+									"value": "تست ارسال پیام",
+									"type": "text"
+								},
+								{
+									"key": "date",
+									"value": "0",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url_legacy}}/webservice/rest/sms_send",
+							"host": [
+								"{{base_url_legacy}}"
+							],
+							"path": [
+								"webservice",
+								"rest",
+								"sms_send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "REST: Get Delivery",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_legacy}}/webservice/rest/sms_deliver?smsid[]=92943981&smsid[]=92943982&dargah=3000",
+							"host": [
+								"{{base_url_legacy}}"
+							],
+							"path": [
+								"webservice",
+								"rest",
+								"sms_deliver"
+							],
+							"query": [
+								{
+									"key": "smsid[]",
+									"value": "92943981"
+								},
+								{
+									"key": "smsid[]",
+									"value": "92943982"
+								},
+								{
+									"key": "dargah",
+									"value": "3000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "REST: Get Received SMS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_legacy}}/webservice/rest/sms_receive_list?api_key={{api_key_legacy}}&page_number=1&perpage=10",
+							"host": [
+								"{{base_url_legacy}}"
+							],
+							"path": [
+								"webservice",
+								"rest",
+								"sms_receive_list"
+							],
+							"query": [
+								{
+									"key": "api_key",
+									"value": "{{api_key_legacy}}"
+								},
+								{
+									"key": "page_number",
+									"value": "1"
+								},
+								{
+									"key": "perpage",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "VMS: Send Voice (OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "login_username",
+									"value": "USERNAME",
+									"type": "text"
+								},
+								{
+									"key": "login_password",
+									"value": "PASSWORD",
+									"type": "text"
+								},
+								{
+									"key": "api",
+									"value": "otp",
+									"type": "text"
+								},
+								{
+									"key": "receiver_number",
+									"value": "09123456789",
+									"type": "text"
+								},
+								{
+									"key": "otp_code",
+									"value": "12345",
+									"type": "text"
+								},
+								{
+									"key": "kind",
+									"value": "yek",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url_legacy}}/webservice/vms/api.php",
+							"host": [
+								"{{base_url_legacy}}"
+							],
+							"path": [
+								"webservice",
+								"vms",
+								"api.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "[ESB 1.5] PersiaFava",
+			"description": "پلتفرم میانی ESB بر روی پورت 7074",
+			"item": [
+				{
+					"name": "Send SMS (Multi-send)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"senders\": [\n        \"3000xxxxxx\"\n    ],\n    \"recipients\": [\n        \"+989123456789\",\n        \"+989123456780\"\n    ],\n    \"messages\": [\n        \"تست پیام اول\",\n        \"تست پیام دوم\"\n    ],\n    \"uids\": [\n        1234567890,\n        1234567891\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_1_5}}/api/v1/sms/send/3000",
+							"host": [
+								"{{base_url_esb_1_5}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sms",
+								"send",
+								"3000"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "[ESB V2] PersiaFava",
+			"description": "جدیدترین پلتفرم ESB (سابقا Fanap Mobile)",
+			"item": [
+				{
+					"name": "Send PeerToPeer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"senders\": [\n        \"989992178097\"\n    ],\n    \"messages\": [\n        \"تست\"\n    ],\n    \"recipients\": [\n        \"+989127962521\"\n    ],\n    \"uids\": [\n        \"202505111322032890\"\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3000/PeerToPeer",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3000",
+							"path": [
+								"PeerToPeer"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Bulk",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\": \"989992178097\",\n    \"message\": \"تست گروهی\",\n    \"recipients\": [\n        \"+989127962521\",\n        \"+989127962522\"\n    ],\n    \"uids\": [\n        \"202505111322032891\",\n        \"202505111322032892\"\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3001/Bulk",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3001",
+							"path": [
+								"Bulk"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\":\"40400000\",\n    \"message\":\"کد احراز هویت شما 123456\",\n    \"recipient\":\"+989132677411\",\n    \"uid\":\"789as1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3002/Otp",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3002",
+							"path": [
+								"Otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Delivery",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    \"SMSID1\",\n    \"SMSID2\"\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3003/Delivery",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3003",
+							"path": [
+								"Delivery"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Received List (MO)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"page_number\": 1,\n    \"perpage\": 3,\n    \"read\": 0,\n    \"ordermode\": \"DESC\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3004/ReceivedList",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3004",
+							"path": [
+								"ReceivedList"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Received as Read",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"read\": 1,\n    \"ids\": [\n        4581399,\n        12666\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3005/ReceivedChangeRead",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3005",
+							"path": [
+								"ReceivedChangeRead"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{auth_string_esb}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url_esb_v2_base}}:3006/UserInfo",
+							"host": [
+								"{{base_url_esb_v2_base}}"
+							],
+							"port": "3006",
+							"path": [
+								"UserInfo"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url_legacy",
+			"value": "http://sms.persiafava.com"
+		},
+		{
+			"key": "base_url_esb_1_5",
+			"value": "https://sms.persiafava.com:7074"
+		},
+		{
+			"key": "base_url_esb_v2_base",
+			"value": "https://sms.persiafava.com"
+		},
+		{
+			"key": "api_key_legacy",
+			"value": "YOUR_LEGACY_API_KEY"
+		},
+		{
+			"key": "auth_string_esb",
+			"value": "YOUR_ESB_BASIC_AUTH_STRING"
+		}
+	]
+}

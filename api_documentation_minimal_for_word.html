@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>راهنمای جامع وب‌سرویس پیام کوتاه (نسخه Word)</title>
+    <style>
+        /* Minimal styles for basic structure, Word ignores most of this anyway */
+        body { font-family: 'Tahoma', sans-serif; direction: rtl; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 15px; border: 1px solid #ccc; }
+        th, td { border: 1px solid #ccc; padding: 5px; text-align: right; }
+        th { background-color: #f0f0f0; }
+        pre { background-color: #f5f5f5; border: 1px solid #ddd; padding: 10px; direction: ltr; text-align: left; font-family: 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+
+    <h1>راهنمای جامع وب‌سرویس پیام کوتاه</h1>
+    <p>این راهنما برای توسعه‌دهندگانی طراحی شده است که قصد دارند سرویس‌های پیام کوتاه و صوتی را به نرم‌افزارهای کاربردی خود متصل کنند. این مستند شامل راهنمای پلتفرم‌های مختلف وب‌سرویس ما می‌باشد.</p>
+
+    <hr>
+
+    <!-- =================================================================== -->
+    <!-- ==================     LEGACY PERSIAFAVA API     ================== -->
+    <!-- =================================================================== -->
+    <h2>پلتفرم (Legacy - PersiaFava)</h2>
+    <p>این بخش شامل مستندات وب‌سرویس‌های قدیمی‌تر (SOAP, GET) و وب‌سرویس REST پلتفرم <code>sms.persiafava.com</code> می‌باشد.</p>
+
+    <h3>مفاهیم پایه (Legacy)</h3>
+    
+    <h4>کدهای خطا (Legacy)</h4>
+    <p>پاسخ‌های خطا در این API می‌توانند به دو شکل باشند:</p>
+    <ol>
+        <li><strong>خطاهای سیستمی (رشته‌ای):</strong> خطاهایی که مستقیماً توسط سیستم ما شناسایی و مدیریت می‌شوند، با یک کد خطای رشته‌ای مشخص (مانند <code>error_credit_error</code>) در فیلد <code>error</code> بازگردانده می‌شوند. مقدار <code>result</code> در این حالت <code>false</code> خواهد بود.</li>
+        <li><strong>خطاهای اپراتور (عددی):</strong> در برخی موارد، ممکن است خطایی مستقیماً از سمت اپراتورهای بالادستی (CP) رخ دهد. اگر این خطا در سیستم ما به صورت خاص نگاشت (Map) نشده باشد، کد خطای عددی دریافتی از اپراتور (مانند <code>14</code>) مستقیماً در فیلد <code>status</code> پاسخ بازگردانده می‌شود.</li>
+    </ol>
+    <p>لیست جامع هر دو نوع خطا در زیر آمده است. توصیه می‌شود هر دو نوع پاسخ خطا را در کد خود مدیریت کنید.</p>
+
+    <p><strong>نمونه پاسخ خطای سیستمی (رشته‌ای):</strong></p>
+    <pre>{
+  "result": false,
+  "error": "error_credit_error"
+}</pre>
+
+    <p><strong>نمونه پاسخ خطای اپراتور (عددی):</strong></p>
+    <pre>{
+  "status": 14,
+  "messages": [] // ممکن است فیلدهای دیگری نیز وجود داشته باشد
+}</pre>
+
+    <h4>کدهای خطای سیستمی (رشته‌ای - Legacy)</h4>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>کد خطا</th>
+                <th>توضیح</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>erorr_login_user_not_found</code></td><td>چنین کاربری یافت نشد (نام کاربری اشتباه است).</td></tr>
+            <tr><td><code>error_login_not_like_username</code></td><td>نام کاربری مشکلی دارد (مثلاً استفاده از کاراکترهای غیرمجاز یا فاصله).</td></tr>
+            <tr><td><code>error_login_not_like_password</code></td><td>پسورد مشکلی دارد (رمز عبور اشتباه است).</td></tr>
+            <tr><td><code>error_login_not_like_accept</code></td><td>دسترسی شما مسدود شده است و یا کد تایید پیامکی را وارد نکرده‌اید.</td></tr>
+            <tr><td><code>error_register_taken_email</code></td><td>چنین ایمیلی قبلاً در سیستم ثبت شده است.</td></tr>
+            <tr><td><code>error_register_taken_user_username</code></td><td>نام کاربری قبلاً استفاده شده است.</td></tr>
+            <tr><td><code>error_register_taken_user_mobile</code></td><td>شماره موبایل قبلاً استفاده شده است.</td></tr>
+            <tr><td><code>error_no_receiver</code></td><td>لیست گیرنده‌ها خالی می‌باشد.</td></tr>
+            <tr><td><code>error_sender_number_is_not_allow</code></td><td>شماره‌ی ارسال کننده مجاز نمی‌باشد (این خط متعلق به شما نیست).</td></tr>
+            <tr><td><code>error_long_request_uniqueid</code></td><td>طول کد یکتا (request_uniqueid) بیشتر از حد مجاز است.</td></tr>
+            <tr><td><code>error_sender_number_is_disable</code></td><td>شماره‌ی ارسال کننده غیرفعال می‌باشد.</td></tr>
+            <tr><td><code>error_number_format_error</code></td><td>فرمت شماره‌ی گیرنده مشکل دارد (مثلاً تعداد ارقام صحیح نیست).</td></tr>
+            <tr><td><code>error_number_whois_error</code></td><td>شماره‌ی ارسال کننده احراز هویت نشده است.</td></tr>
+            <tr><td><code>error_sms_receiver_number_limit</code></td><td>تعداد گیرنده‌ها در یک درخواست، بیشتر از حد مجاز می‌باشد.</td></tr>
+            <tr><td><code>error_sms_send_config_is_disable</code></td><td>ارسال از این پیش‌شماره (اپراتور) موقتاً غیر فعال می‌باشد.</td></tr>
+            <tr><td><code>error_sms_price_not_found_for_admin</code></td><td>خطای سیستمی: هزینه‌ی ارسال پیامک مدیر مشخص نمی‌باشد.</td></tr>
+            <tr><td><code>error_sms_price_packageid_not_found_for_admin</code></td><td>خطای سیستمی: پکیج قیمت مدیر یافت نشد.</td></tr>
+            <tr><td><code>error_sms_price_not_found_for_user</code></td><td>خطای سیستمی: هزینه‌ی ارسال پیامک برای کاربر مشخص نمی‌باشد.</td></tr>
+            <tr><td><code>error_credit_admin_error</code></td><td>شارژ مدیر (سطح بالا) کم است.</td></tr>
+            <tr><td><code>error_credit_admin_empty_error</code></td><td>خطای سیستمی: هزینه‌ی ارسال برای مدیر اشتباه محاسبه شده است.</td></tr>
+            <tr><td><code>error_credit_error</code></td><td>اعتبار کاربر برای انجام این عملیات کافی نیست.</td></tr>
+        </tbody>
+    </table>
+
+    <h4>کدهای خطای اپراتور (عددی - Legacy)</h4>
+    <p>این کدها عموماً در مواقعی بازگردانده می‌شوند که خطایی مستقیماً از سمت اپراتور بالادستی (مانند Magfa V2) رخ داده و در سیستم نگاشت نشده باشد.</p>
+    <table border="1">
+        <thead>
+            <tr><th>کد خطا</th><th>توضیحات (برگرفته از مستندات Magfa V2)</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>شماره گيرنده نادرست است.</td></tr>
+            <tr><td>2</td><td>شماره فرستنده نادرست است.</td></tr>
+            <tr><td>3</td><td>پارامتر encoding نامعتبراست.</td></tr>
+            <tr><td>6</td><td>پارامتر UDH نامعتبر است.</td></tr>
+            <tr><td>8</td><td>زمان ارسال پيامک، خارج از بازه‌ی مجاز ارسال پيامک تبليغاتی (۷ الی ۲۲) است.</td></tr>
+            <tr><td>13</td><td>محتويات پيامک (تركيب UDH و متن) خالی است.</td></tr>
+            <tr><td>14</td><td>مانده اعتبار ريالی مورد نياز برای ارسال پیامک کافی نيست.</td></tr>
+            <tr><td>15</td><td>سرور در هنگام ارسال پيام مشغول برطرف نمودن ايراد داخلی بوده است. (ارسال مجدد درخواست)</td></tr>
+            <tr><td>16</td><td>حساب غيرفعال است. (تماس با واحد فروش)</td></tr>
+            <tr><td>17</td><td>حساب منقضی شده است. (تماس با واحد فروش)</td></tr>
+            <tr><td>18</td><td>نام كاربری و يا كلمه عبور نامعتبر است.</td></tr>
+            <tr><td>19</td><td>درخواست معتبر نيست. (تركيب نام كاربری، رمز عبور و دامنه اشتباه است)</td></tr>
+            <tr><td>20</td><td>شماره فرستنده به حساب تعلق ندارد.</td></tr>
+            <tr><td>22</td><td>اين سرويس برای حساب فعال نشده است.</td></tr>
+            <tr><td>23</td><td>در حال حاضر امکان پردازش درخواست جديد وجود ندارد، لطفا دوباره سعی كنيد.</td></tr>
+            <tr><td>24</td><td>شناسه پيامک معتبر نيست (ممکن است اشتباه باشد یا بیش از ۲۴ ساعت گذشته باشد).</td></tr>
+            <tr><td>25</td><td>نام متد درخواستی معتبر نيست.</td></tr>
+            <tr><td>27</td><td>شماره گيرنده در ليست سياه اپراتور قرار دارد.</td></tr>
+            <tr><td>28</td><td>شماره گیرنده، بر اساس پیش‌شماره در حال حاضر مسدود است.</td></tr>
+            <tr><td>29</td><td>آدرس IP مبدا، اجازه دسترسی به این سرویس را ندارد.</td></tr>
+            <tr><td>30</td><td>تعداد بخش‌های پیامک بیش از حد مجاز استاندارد (۲۶۵ عدد) است.</td></tr>
+            <tr><td>31</td><td>فرمت JSON ارسالی صحيح نیست.</td></tr>
+            <tr><td>33</td><td>مشترک، دريافت پيامک از اين سرشماره را مسدود نموده است (لغو ۱۱).</td></tr>
+            <tr><td>34</td><td>اطلاعات تایید‌شده برای اين شماره وجود ندارد.</td></tr>
+            <tr><td>35</td><td>وجود کاراکتر نامعتبر در متن پیامک.</td></tr>
+            <tr><td>101</td><td>طول آرايه پارامتر messageBodies با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+            <tr><td>102</td><td>طول آرايه پارامتر messageClass با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+            <tr><td>103</td><td>طول آرايه پارامتر senderNumbers با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+            <tr><td>104</td><td>طول آرايه پارامتر udhs با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+            <tr><td>105</td><td>طول آرايه پارامتر priorities با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+            <tr><td>106</td><td>آرايه‌ی گيرندگان خالی است.</td></tr>
+            <tr><td>107</td><td>طول آرايه پارامتر گيرندگان بيشتر از طول مجاز است (۱۰۰ عدد).</td></tr>
+            <tr><td>108</td><td>آرايه‌ی فرستندگان خالی است.</td></tr>
+            <tr><td>109</td><td>طول آرايه پارامتر encoding با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+            <tr><td>110</td><td>طول آرايه پارامتر checkingMessageIds با طول آرايه گيرندگان تطابق ندارد.</td></tr>
+        </tbody>
+    </table>
+
+    <h4>درگاه‌های ارسال (Gateways)</h4>
+    <p>مقادیر ذکر شده در این جدول برای تمامی متدهایی که پارامتر <code>dargahha</code> یا <code>dargah</code> دارند (مانند <code>sms_deliver</code>) قابل استفاده می‌باشد.</p>
+    <table border="1">
+        <thead>
+            <tr><th>اسم درگاه</th><th>مقداری که باید استفاده شود</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>3000 - مسیر اصلی</td><td><code>3000</code></td></tr>
+            <tr><td>3000 - مسیر فرعی اول</td><td><code>30001</code></td></tr>
+            <tr><td>3000 - ESB اصلی</td><td><code>30000</code></td></tr>
+            <tr><td>3000 - ESB یک</td><td><code>300010</code></td></tr>
+            <tr><td>3000 - مسیر فرعی دوم</td><td><code>30002</code></td></tr>
+            <tr><td>3000 - ESB فرعی دو</td><td><code>300020</code></td></tr>
+            <tr><td>9000 - مسیر اصلی</td><td><code>9000</code></td></tr>
+            <tr><td>50002 - مسیر اصلی</td><td><code>50002</code></td></tr>
+            <tr><td>آرینتل - ارسال گروهی و بالک خدماتی</td><td><code>999800</code></td></tr>
+            <tr><td>3000 - مسیر فرعی سوم</td><td><code>30003</code></td></tr>
+            <tr><td>3000 - مسیر فرعی چهارم</td><td><code>30004</code></td></tr>
+            <tr><td>3000 - مسیر فرعی پنجم</td><td><code>30005</code></td></tr>
+            <tr><td>3000 - مسیر فرعی ششم</td><td><code>30006</code></td></tr>
+            <tr><td>3000 - مسیر فرعی هفتم</td><td><code>30007</code></td></tr>
+            <tr><td>3000 - مسیر فرعی هشتم</td><td><code>30008</code></td></tr>
+            <tr><td>3000 - مسیر فرعی نهم</td><td><code>30009</code></td></tr>
+            <tr><td>3003 - ESB</td><td><code>3003</code></td></tr>
+            <tr><td>فناپ - خدماتی</td><td><code>9992101</code></td></tr>
+        </tbody>
+    </table>
+
+    <h4>وضعیت پیامک‌ها (Delivery Status)</h4>
+    <p>کدهای وضعیتی که در پاسخ متدهای دریافت وضعیت (مانند <code>sms_deliver</code>) بازگردانده می‌شوند.</p>
+    <table border="1">
+        <thead>
+            <tr><th>عدد</th><th>معنا</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>-1</td><td>پیام یافت نشد - ممکن است پیام به آرشیو منتقل شده باشد.</td></tr>
+            <tr><td>0</td><td>بدون وضعیت - در انتظار دریافت وضعیت.</td></tr>
+            <tr><td>1</td><td>رسیده به گوشی.</td></tr>
+            <tr><td>2</td><td>نرسیده به گوشی.</td></tr>
+            <tr><td>3</td><td>ارسال نشده به مخابرات.</td></tr>
+            <tr><td>4</td><td>ارسال شده به مخابرات - (ممکن است به وضعیت آرشیو تبدیل شود).</td></tr>
+            <tr><td>5</td><td>لیست سیاه مخابرات - (ممکن است به معنای بازگشت وجه نیز باشد).</td></tr>
+            <tr><td>8</td><td>ارسال شده به اپراتور پیامکی.</td></tr>
+            <tr><td>9</td><td>بازگشت هزینه به دلیل ترافیک مخابرات.</td></tr>
+            <tr><td>10</td><td>صف ارسال.</td></tr>
+            <tr><td>11</td><td>اسپم.</td></tr>
+            <tr><td>12</td><td>اکسپایر (منقضی شده).</td></tr>
+            <tr><td>13</td><td>بدون روت (مسیر ارسال یافت نشد).</td></tr>
+            <tr><td>14</td><td>ریجکت شده (رد شده).</td></tr>
+            <tr><td>16</td><td>نرسیده به مخابرات.</td></tr>
+            <tr><td>17</td><td>بدون وضعیت دلیوربیس.</td></tr>
+        </tbody>
+    </table>
+    
+    <h4>فرمت تاریخ (Unix Timestamp)</h4>
+    <p>تمامی تاریخ‌ها بر اساس Unix Timestamp (ثانیه) می‌باشد. این تاریخ شامل یک عدد است که از تاریخ 1 ژانویه 1970 (UTC) شروع شده است.</p>
+    <table border="1">
+        <thead>
+            <tr><th>زبان / پلتفرم</th><th>نمونه کد</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>PHP</td><td><code>time()</code></td></tr>
+            <tr><td>Python</td><td><code>import time; time.time()</code></td></tr>
+            <tr><td>Ruby</td><td><code>Time.now.to_i</code></td></tr>
+            <tr><td>Perl</td><td><code>time</code></td></tr>
+            <tr><td>Java</td><td><code>long epoch = System.currentTimeMillis()/1000;</code></td></tr>
+            <tr><td>C#</td><td><code>var epoch = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;</code></td></tr>
+            <tr><td>JavaScript</td><td><code>Math.round(new Date().getTime()/1000.0)</code></td></tr>
+            <tr><td>MySQL</td><td><code>SELECT unix_timestamp(now())</code></td></tr>
+            <tr><td>PostgreSQL</td><td><code>SELECT extract(epoch FROM now());</code></td></tr>
+            <tr><td>SQLite</td><td><code>SELECT strftime('%s', 'now');</code></td></tr>
+            <tr><td>Unix Shell</td><td><code>date +%s</code></td></tr>
+        </tbody>
+    </table>
+    
+    <h4>وب‌هوک پیامک دریافتی (Legacy MO Webhook)</h4>
+    <p>با استفاده از این سرویس، پیامک دریافتی (MO) شما بلافاصله پس از دریافت به آدرسی که در تنظیمات مشخص کرده‌اید به صورت <code>POST</code> ارسال می‌شود. پارامترهایی که شما در آدرس URL قرار می‌دهید به صورت <code>GET</code> و پارامترهای اصلی به صورت <code>POST</code> ارسال می‌شوند.</p>
+    <p><strong>پارامترهای ارسالی (POST):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>نام پارامتر</th><th>توضیح</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>from</code></td><td>شماره ارسال کننده پیامک (مثال: 09132125459)</td></tr>
+            <tr><td><code>to</code></td><td>شماره دریافت کننده پیامک (مثال: 3000569999)</td></tr>
+            <tr><td><code>note</code></td><td>متن پیامک (مثال: این یک تست است)</td></tr>
+            <tr><td><code>smsid</code></td><td>شناسه پیامک (مثال: 1234567)</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>وب‌سرویس REST (Legacy - PersiaFava)</h3>
+    <p>این API پیشنهادی این پلتفرم است. آدرس پایه (Base URL) برای تمام متدهای REST به صورت زیر می‌باشد:</p>
+    <pre>http://sms.persiafava.com/webservice/rest/</pre>
+
+    <h4>احراز هویت (Legacy)</h4>
+    <p>در تمامی متدهای این بخش، می‌توانید به جای ارسال <code>login_username</code> و <code>login_password</code>، از <code>api_key</code> استفاده نمایید.</p>
+    <div style="border-right: 3px solid #007acc; background-color: #e6f7ff; padding: 10px; margin: 10px 0;">
+        <strong>دریافت API Key:</strong> می‌توانید <code>api_key</code> خود را از پنل کاربری دریافت نمایید.
+    </div>
+
+    <pre>GET http://sms.persiafava.com/webservice/rest/sms_send?note_arr[]=سلام&api_key=API_KEY&receiver_number=09132125459&sender_number=3000569999</pre>
+    <pre>GET http://sms.persiafava.com/webservice/rest/sms_send?note_arr[]=سلام&login_username=USERNAME&login_password=PASSWORD&receiver_number=09132125459&sender_number=3000569999</pre>
+
+    <h4>متد: دریافت اطلاعات کاربری (user_info)</h4>
+    <p>از این متد برای دریافت اطلاعات کاربری، شماره‌های اختصاصی و میزان شارژ استفاده می‌شود.</p>
+    <pre>GET /user_info</pre>
+    
+    <p><strong>پارامترها (Query):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>login_username</code></td><td>string</td><td>✓ (یا api_key)</td><td>نام کاربری سامانه پیامک</td></tr>
+            <tr><td><code>login_password</code></td><td>string</td><td>✓ (یا api_key)</td><td>رمز عبور سامانه پیامک</td></tr>
+        </tbody>
+    </table>
+
+    <h4>نمونه پاسخ موفق (JSON):</h4>
+    <pre>{
+  "result": true,
+  "list": {
+    "username": "admin_USERNAME",
+    "fullname": "ارسال",
+    "email": "myemailt@yahoo.com",
+    "mobile": "09132125459",
+    "cash": "3212509",
+    "date": "1389/5/5 00:46",
+    "date_expire": "1394/2/24 00:00"
+  },
+  "number": { ... } // اطلاعات شماره‌ها
+}</pre>
+
+    <h4>متد: ارسال پیامک (sms_send)</h4>
+    <p>از این متد برای ارسال پیامک استفاده می‌شود. می‌توانید از متد `POST` یا `GET` استفاده کنید.</p>
+    <pre>POST / GET /sms_send</pre>
+
+    <p><strong>پارامترها (Query / Form-Data):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>login_username</code></td><td>string</td><td>✓ (یا api_key)</td><td>نام کاربری</td></tr>
+            <tr><td><code>login_password</code></td><td>string</td><td>✓ (یا api_key)</td><td>رمز عبور</td></tr>
+            <tr><td><code>sender_number</code></td><td>string</td><td>✓</td><td>شماره ارسال کننده</td></tr>
+            <tr><td><code>receiver_number</code></td><td>string / []string</td><td>✓</td><td>شماره(های) دریافت کننده. (با کاما <code>,</code> جدا شوند یا به صورت آرایه)</td></tr>
+            <tr><td><code>note_arr</code></td><td>string / []string</td><td>✓</td><td>متن پیامک. (می‌تواند آرایه باشد برای ارسال نظیر به نظیر)</td></tr>
+            <tr><td><code>clientids</code></td><td>[]string</td><td>خیر</td><td>شناسه پیامک برای دریافت دلیوری (آرایه)</td></tr>
+            <tr><td><code>date</code></td><td>string</td><td>خیر</td><td>تاریخ ارسال (Unix Timestamp). پیش‌فرض <code>0</code> (ارسال آنی).</td></tr>
+            <tr><td><code>request_uniqueid</code></td><td>string</td><td>خیر</td><td>کد یکتا برای جلوگیری از ارسال تکراری. پیش‌فرض <code>0</code>.</td></tr>
+            <tr><td><code>flash</code></td><td>string</td><td>خیر</td><td><code>ok</code> (برای ارسال فلش) یا <code>no</code> (پیش‌فرض).</td></tr>
+            <tr><td><code>onlysend</code></td><td>string</td><td>خیر</td><td><code>ok</code> (ارسال با تاخیر ۳۰ ثانیه) یا <code>no</code> (پیش‌فرض).</td></tr>
+            <tr><td><code>show_faktor</code></td><td>string</td><td>خیر</td><td><code>ok</code> (عدم ارسال و فقط نمایش هزینه) یا <code>no</code> (پیش‌فرض).</td></tr>
+            <tr><td><code>tb_name_in_smsid</code></td><td>string</td><td>خیر</td><td><code>ok</code> (برای استفاده از متد دلیوری <code>sms_deliver_tb_name_in_smsid</code>).</td></tr>
+        </tbody>
+    </table>
+
+    <h4>نمونه درخواست (cURL - POST):</h4>
+    <pre>curl --location -k --request POST 'http://sms.persiafava.com/webservice/rest/sms_send' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'api_key=2:628fa6a500d3b' \
+--data-urlencode 'receiver_number=09132125459' \
+--data-urlencode 'sender_number=3000569999' \
+--data-urlencode 'note_arr[]=hi' \
+--data-urlencode 'date=0'</pre>
+    
+    <h4>نمونه درخواست (cURL - POST نظیر به نظیر):</h4>
+    <pre>curl --location -k --request POST 'http://sms.persiafava.com/webservice/rest/sms_send' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'api_key=2:628fa6a500d3b' \
+--data-urlencode 'sender_number=3000569999' \
+--data-urlencode 'note_arr[]=hi 1' \
+--data-urlencode 'receiver_number[]=091321254591' \
+--data-urlencode 'note_arr[]=hi 2' \
+--data-urlencode 'receiver_number[]=091321254592'</pre>
+
+    <h4>نمونه پاسخ موفق (JSON):</h4>
+    <pre>{
+  "result": true,
+  "list": [
+    "788137_5fcc745d14604_0",
+    "788137_5fcc745d14604_1"
+  ]
+}</pre>
+
+    <h4>متد: وضعیت پیامک (sms_deliver)</h4>
+    <p>از این متد برای اطلاع از وضعیت پیامک‌های ارسال شده استفاده می‌شود. (وضعیت‌ها هر ۳۰ دقیقه به‌روزرسانی می‌شوند).</p>
+    <pre>GET /sms_deliver</pre>
+    
+    <p><strong>پارامترها (Query):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>dargah</code></td><td>string</td><td>✓</td><td>علامت درگاه (مثلاً <code>3000</code>). به جدول درگاه‌ها مراجعه کنید.</td></tr>
+            <tr><td><code>smsid</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از شناسه‌های پیامک‌های ارسالی.</td></tr>
+            <tr><td><code>archive_year</code></td><td>int</td><td>خیر</td><td>برای جستجو در آرشیو، سال ارسال (مثلاً 1400).</td></tr>
+            <tr><td><code>archive_month</code></td><td>int</td><td>خیر</td><td>برای جستجو در آرشیو، ماه ارسال (مثلاً 3).</td></tr>
+        </tbody>
+    </table>
+
+    <h4>نمونه درخواست (HTTP):</h4>
+    <pre>GET http://sms.persiafava.com/webservice/rest/sms_deliver?smsid[]=92943981&smsid[]=92943982&dargah=3000</pre>
+
+    <h4>نمونه پاسخ موفق (JSON):</h4>
+    <pre>{
+  "result": true,
+  "list": {
+    "92943981": "5",
+    "92943982": "1"
+  }
+}</pre>
+
+    <h4>متد: وضعیت پیامک (sms_deliver_tb_name_in_smsid)</h4>
+    <p>مانند متد <code>sms_deliver</code> عمل می‌کند، اما برای پیامک‌هایی که با پارامتر <code>tb_name_in_smsid=ok</code> ارسال شده‌اند.</p>
+    <pre>GET /sms_deliver_tb_name_in_smsid</pre>
+
+    <p><strong>پارامترها (Query):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>smsid</code></td><td>[]string</td><td>✓</td><td>آرایه‌ای از شناسه‌های پیامک‌های ارسالی.</td></tr>
+        </tbody>
+    </table>
+
+    <h4>متد: لیست پیامک‌های دریافتی (sms_receive_list)</h4>
+    <p>از این متد برای دریافت لیست پیامک‌های دریافتی (MO) استفاده می‌شود.</p>
+    <pre>GET /sms_receive_list</pre>
+
+    <p><strong>پارامترها (Query):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>login_username</code></td><td>string</td><td>✓ (یا api_key)</td><td>نام کاربری</td></tr>
+            <tr><td><code>login_password</code></td><td>string</td><td>✓ (یا api_key)</td><td>رمز عبور</td></tr>
+            <tr><td><code>page_number</code></td><td>int</td><td>خیر</td><td>شماره صفحه (شروع از 1)</td></tr>
+            <tr><td><code>perpage</code></td><td>int</td><td>خیر</td><td>تعداد نتایج در هر صفحه</td></tr>
+            <tr><td><code>read</code></td><td>int</td><td>خیر</td><td><code>1</code> (خوانده شده)، <code>0</code> (خوانده نشده)، خالی (همه)</td></tr>
+            <tr><td><code>catid</code></td><td>int</td><td>خیر</td><td>فیلتر بر اساس شماره گروه دریافتی</td></tr>
+            <tr><td><code>number</code></td><td>int</td><td>خیر</td><td>فیلتر بر اساس شماره دریافت کننده (خط اختصاصی شما)</td></tr>
+            <tr><td><code>labelid</code></td><td>int</td><td>خیر</td><td>فیلتر بر اساس شناسه کلمه کلیدی</td></tr>
+            <tr><td><code>count</code></td><td>int</td><td>خیر</td><td>فقط تعداد را نمایش بده (ارسال نشود برای دریافت لیست)</td></tr>
+            <tr><td><code>fromid</code></td><td>int</td><td>خیر</td><td>دریافت پیام‌های با ID بزرگتر از این شناسه</td></tr>
+        </tbody>
+    </table>
+
+    <h4>نمونه پاسخ موفق (JSON):</h4>
+    <pre>{
+  "result": true,
+  "list": [
+    {
+      "id": "1227955",
+      "sender_number": "09132125459",
+      "receiver_number": "3000569999",
+      "date": "1493483544",
+      "date_fa": "1396/2/9 21:02",
+      "catid": "0",
+      "read": "0",
+      "note": "خانم شیرانی"
+    }
+  ]
+}</pre>
+
+    <h4>متدهای دفترچه تلفن و کلمات کلیدی</h4>
+    <p>این پلتفرم همچنین شامل متدهایی برای مدیریت دفترچه تلفن و کلمات کلیدی می‌باشد (جزئیات در مستندات اصلی).</p>
+    <ul>
+        <li><code>user_cat_add</code></li>
+        <li><code>user_cat_list</code></li>
+        <li><code>user_cat_info</code></li>
+        <li><code>sms_number_add</code></li>
+        <li><code>sms_number_list</code></li>
+        <li><code>sms_receive_change_read</code></li>
+        <li><code>label_list</code></li>
+        <li><code>label_new</code></li>
+        <li><code>label_edit</code></li>
+        <li><code>label_remove</code></li>
+    </ul>
+
+    <hr>
+
+    <h3>وب‌سرویس SOAP (Legacy)</h3>
+    <p>این روش قدیمی‌تر است و استفاده از REST پیشنهاد می‌شود.</p>
+    <p><strong>آدرس WSDL:</strong></p>
+    <pre>http://sms.persiafava.com/webservice/soap/smsService.php?wsdl</pre>
+    
+    <h4>متد: ارسال پیامک (send_sms)</h4>
+    <p><strong>پارامترها:</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>username</code></td><td>string</td><td>✓</td><td>نام کاربری</td></tr>
+            <tr><td><code>password</code></td><td>string</td><td>✓</td><td>رمز عبور</td></tr>
+            <tr><td><code>sender_number</code></td><td>ArrayOfString</td><td>✓</td><td>شماره ارسال کننده (آرایه)</td></tr>
+            <tr><td><code>receiver_number</code></td><td>ArrayOfString</td><td>✓</td><td>شماره(های) دریافت کننده (آرایه)</td></tr>
+            <tr><td><code>note</code></td><td>ArrayOfString</td><td>✓</td><td>متن(های) پیامک (آرایه)</td></tr>
+            <tr><td><code>date</code></td><td>ArrayOfString</td><td>✓</td><td>تاریخ ارسال (Unix Timestamp). <code>"0"</code> برای ارسال آنی.</td></tr>
+            <tr><td><code>request_uniqueid</code></td><td>ArrayOfString</td><td>✓</td><td>کد یکتا. <code>""</code> (خالی) برای عدم نیاز به چک کردن.</td></tr>
+            <tr><td><code>flash</code></td><td>ArrayOfString</td><td>✓</td><td><code>"ok"</code> یا <code>"no"</code>.</td></tr>
+            <tr><td><code>onlysend</code></td><td>string</td><td>✓</td><td><code>"ok"</code> (ارسال با تاخیر) یا <code>"no"</code> (ارسال آنی).</td></tr>
+        </tbody>
+    </table>
+
+    <h4>نمونه درخواست (XML - SOAP):</h4>
+    <pre><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="sms_webservice_wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="urn:sms_webservice_wsdl" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <SOAP-ENV:Body>
+    <ns1:send_sms>
+      <username xsi:type="xsd:string">username here</username>
+      <password xsi:type="xsd:string">password here</password>
+      <sender_number SOAP-ENC:arrayType="xsd:string[1]" xsi:type="ns2:ArrayOfString">
+        <item xsi:type="xsd:string">3000569999</item>
+      </sender_number>
+      <receiver_number SOAP-ENC:arrayType="xsd:string[1]" xsi:type="ns2:ArrayOfString">
+        <item xsi:type="xsd:string">+989126133361</item>
+      </receiver_number>
+      <note SOAP-ENC:arrayType="xsd:string[1]" xsi:type="ns2:ArrayOfString">
+        <item xsi:type="xsd:string">تست</item>
+      </note>
+      <date SOAP-ENC:arrayType="xsd:string[1]" xsi:type="ns2:ArrayOfString">
+        <item xsi:type="xsd:string">0</item>
+      </date>
+      <request_uniqueid SOAP-ENC:arrayType="xsd:string[1]" xsi:type="ns2:ArrayOfString">
+        <item xsi:type="xsd:string"></item>
+      </request_uniqueid>
+      <flash SOAP-ENC:arrayType="xsd:string[1]" xsi:type="ns2:ArrayOfString">
+        <item xsi:type="xsd:string">no</item>
+      </flash>
+      <onlysend xsi:type="xsd:string">ok</onlysend>
+    </ns1:send_sms>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>]]></pre>
+
+    <h4>متد: پیام‌های دریافتی (sms_receive)</h4>
+    <p>از این متد برای گرفتن لیست پیام‌های دریافتی (MO) استفاده می‌شود.</p>
+    
+    <p><strong>پارامترها:</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>username</code></td><td>string</td><td>✓</td><td>نام کاربری</td></tr>
+            <tr><td><code>password</code></td><td>string</td><td>✓</td><td>رمز عبور</td></tr>
+            <tr><td><code>number</code></td><td>string</td><td>✓</td><td>شماره خط اختصاصی</td></tr>
+            <tr><td><code>catid</code></td><td>int</td><td>✓</td><td>شناسه دسته‌بندی پیامک‌های دریافتی</td></tr>
+            <tr><td><code>start</code></td><td>int</td><td>✓</td><td>شناسه شروع لیست (شروع از 1)</td></tr>
+            <tr><td><code>perpage</code></td><td>int</td><td>✓</td><td>تعداد پیامک در هر صفحه (پیش‌فرض 30)</td></tr>
+            <tr><td><code>read</code></td><td>int</td><td>✓</td><td><code>-1</code> (مهم نیست)، <code>0</code> (خوانده نشده)، <code>1</code> (خوانده شده)</td></tr>
+            <tr><td><code>order</code></td><td>string</td><td>✓</td><td><code>'ASC'</code> (صعودی) یا <code>'DESC'</code> (نزولی)</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>وب‌سرویس GET (Legacy)</h3>
+    <p>این روش به دلیل ارسال رمز عبور در URL، **ناامن** بوده و استفاده از آن به هیچ وجه توصیه نمی‌شود.</p>
+    <p><strong>آدرس پایه:</strong></p>
+    <pre>http://sms.persiafava.com/send_via_get/send_sms.php</pre>
+
+    <h4>متد: ارسال پیامک (send_sms)</h4>
+    <pre>GET /send_sms.php</pre>
+
+    <p><strong>پارامترها (Query):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>username</code></td><td>string</td><td>✓</td><td>نام کاربری</td></tr>
+            <tr><td><code>password</code></td><td>string</td><td>✓</td><td>رمز عبور</td></tr>
+            <tr><td><code>sender_number</code></td><td>string</td><td>✓</td><td>شماره ارسال کننده</td></tr>
+            <tr><td><code>receiver_number</code></td><td>string</td><td>✓</td><td>شماره(های) دریافت کننده (جدا شده با <code>,</code>)</td></tr>
+            <tr><td><code>note</code></td><td>string</td><td>✓</td><td>متن پیامک</td></tr>
+            <tr><td><code>request_uniqueid</code></td><td>string</td><td>خیر</td><td>کد یکتا (پیش‌فرض <code>0</code>)</td></tr>
+            <tr><td><code>ersal_flash</code></td><td>string</td><td>خیر</td><td><code>ok</code> (فلش) یا <code>no</code> (معمولی)</td></tr>
+            <tr><td><code>onlysend</code></td><td>string</td><td>خیر</td><td><code>ok</code> (ارسال با تاخیر) یا <code>no</code> (آنی)</td></tr>
+        </tbody>
+    </table>
+    
+    <h4>نمونه درخواست (HTTP):</h4>
+    <pre>GET http://sms.persiafava.com/send_via_get/send_sms.php?note=سلام&username=USERNAME&password=PASSWORD&receiver_number=09132125459&sender_number=3000569999</pre>
+    
+    <h4>نمونه پاسخ موفق (Plain Text):</h4>
+    <pre>92943981,92943982</pre>
+    
+    <hr>
+
+    <h3>وب‌سرویس پیام صوتی (VMS - Legacy)</h3>
+    <p>متدهای مربوط به ارسال پیام صوتی (VMS).</p>
+    <p><strong>آدرس پایه:</strong></p>
+    <pre>http://sms.persiafava.com/webservice/vms/api.php</pre>
+    
+    <h4>متد: ارسال پیام صوتی (send)</h4>
+    <pre>POST /api.php</pre>
+
+    <p><strong>پارامترها (Form-Data):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>login_username</code></td><td>string</td><td>✓</td><td>نام کاربری</td></tr>
+            <tr><td><code>login_password</code></td><td>string</td><td>✓</td><td>رمز عبور</td></tr>
+            <tr><td><code>api</code></td><td>string</td><td>✓</td><td>مقدار ثابت: <code>"send"</code></td></tr>
+            <tr><td><code>receiver_number</code></td><td>string</td><td>✓</td><td>شماره(های) گیرنده (جدا شده با <code>,</code>)</td></tr>
+            <tr><td><code>uniqid</code></td><td>string</td><td>خیر</td><td>کد یکتا (پیش‌فرض <code>0</code>)</td></tr>
+            <tr><td><code>kind</code></td><td>string</td><td>✓</td><td>کانال ارسال (مقدار فعلی: <code>"yek"</code>)</td></tr>
+            <tr><td><code>billing_note</code></td><td>string</td><td>خیر</td><td>توضیحات (برای درج در امور مالی)</td></tr>
+            <tr><td><code>fileToUpload</code></td><td>File</td><td>✓</td><td>فایل صوتی (multipart/form-data)</td></tr>
+        </tbody>
+    </table>
+
+    <h4>متد: احراز هویت صوتی (otp)</h4>
+    <pre>POST /api.php</pre>
+
+    <p><strong>پارامترها (Form-Data):</strong></p>
+    <table border="1">
+        <thead>
+            <tr><th>پارامتر</th><th>نوع</th><th>ضروری؟</th><th>توضیحات</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>login_username</code></td><td>string</td><td>✓</td><td>نام کاربری</td></tr>
+            <tr><td><code>login_password</code></td><td>string</td><td>✓</td><td>رمز عبور</td></tr>
+            <tr><td><code>api</code></td><td>string</td><td>✓</td><td>مقدار ثابت: <code>"otp"</code></td></tr>
+            <tr><td><code>receiver_number</code></td><td>string</td><td>✓</td><td>شماره گیرنده</td></tr>
+            <tr><td><code>otp_code</code></td><td>int</td><td>✓</td><td>کدی که برای کاربر خوانده می‌شود.</td></tr>
+            <tr><td><code>uniqid</code></td><td>string</td><td>خیر</td><td>کد یکتا (پیش‌فرض <code>0</code>)</td></tr>
+            <tr><td><code>kind</code></td><td>string</td><td>✓</td><td>کانال ارسال (مقدار فعلی: <code>"yek"</code>)</td></tr>
+            <tr><td><code>billing_note</code></td><td>string</td><td>خیر</td><td>توضیحات (برای درج در امور مالی)</td></tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
+
