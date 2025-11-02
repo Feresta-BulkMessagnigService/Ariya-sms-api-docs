@@ -1,0 +1,27 @@
+{
+  "name": "persiafava/sms-sdk-php",
+  "description": "Official PHP SDK for the PersiaFava SMS API Platforms (ESB and Legacy)",
+  "type": "library",
+  "require": {
+    "php": "^7.4|^8.0",
+    "guzzlehttp/guzzle": "^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "PersiaFava\\Sms\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "PersiaFava\\Sms\\SmsServiceProvider"
+      ],
+      "aliases": {
+        "Sms": "PersiaFava\\Sms\\Facades\\Sms"
+      }
+    }
+  },
+  "license": "MIT",
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
